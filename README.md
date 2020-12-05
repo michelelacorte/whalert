@@ -1,16 +1,40 @@
-# flutter_trading_volume
+# Whalert
 
-Flutter Trading Volume
+## Table of Contents
 
-## Getting Started
+1. [What's this](#1-whats)
+2. [Features](#2-features)
+3. [Changelog](#3-changelog)
+4. [Contribute](#4-contribute)
+5. [Donation](#5-donation)
 
-This project is a starting point for a Flutter application.
+## 1. What's this
 
-A few resources to get you started if this is your first Flutter project:
+Whalert is a project born from a need, that is to monitor the purchase and sale orders of crypto, especially whales!
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The project is online at the [whalert.it](https://whalert.it) website.
+
+
+## 2. Features
+
+- Ability to change order log size.
+- Ability to monitor single kind of order, all, buy or sell.
+- Ability to view data table with orders.
+- Ability to export data table as csv.
+
+## 3. Changelog
+
+- v0.0.1+1
+	- First public commit
+
+
+## 4. Contribute
+
+Feel free to contribute through pull requests, the project needs you!
+
+## 5. Donation
+
+I leave you my BTC address in case you want to help me with the development and maintenance of the platform!
+
+    1BhC5AgogaeNfqmaonKJwGQxaHMK8wHSsA
