@@ -93,7 +93,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _exportAsCsv,
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: Theme.of(context).accentColor,
           child: Icon(Icons.download_outlined,
             color: Colors.white,
           ),

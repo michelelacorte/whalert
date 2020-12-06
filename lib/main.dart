@@ -30,8 +30,8 @@ class MyApp extends StatelessWidget {
         fontFamily: GoogleFonts.montserrat().fontFamily,
         textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
         primaryColor: Color.fromARGB(255, 14, 38, 72),
-        primaryColorDark: Color.fromARGB(255, 14, 38, 72),
-        accentColor: Color.fromARGB(255, 100, 207, 249),
+        primaryColorDark: Color.fromARGB(255, 5, 22, 47),
+        accentColor: Color.fromARGB(255, 65, 106, 163),
       ),
       home: TradeHomePage(title: 'Whalert'),
     );
@@ -374,7 +374,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _startStopSocket,
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).accentColor,
         child: Icon(
           _started ? Icons.pause : Icons.play_arrow,
           color: Colors.white,
