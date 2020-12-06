@@ -12,6 +12,7 @@ import 'utils/constants.dart';
 import 'routes/donation_route.dart';
 import 'models/binance_trade.dart';
 
+
 final snackBar_alreadyStarted =
     SnackBar(content: Text('Please stop recording before change pairs!'));
 
@@ -187,7 +188,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                             fontSize: 24,
                             color: Colors.white)),
                     subtitle: Text(
-                        'This website is under development!\n\nData are fetched from Binance.\nSoon available on Github!',
+                        'This website is under development!\n\nData are fetched from Binance.',
                         style: TextStyle(color: Colors.white))),
               ],
             ),
@@ -200,7 +201,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                 ListTile(
                   title: Text('Settings',
                       style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
                 ),
                 Padding(
                   padding: EdgeInsets.all(16),
@@ -368,6 +369,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
               ],
             ),
           ),
+
         ],
       ),
       floatingActionButton: FloatingActionButton(

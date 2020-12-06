@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_trading_volume/utils/constants.dart';
 import 'package:yaml/yaml.dart';
+import 'package:universal_html/html.dart' as html;
 
 class CustomDrawer extends StatelessWidget {
   final VoidCallback onHomePressed;
@@ -39,6 +41,13 @@ class CustomDrawer extends StatelessWidget {
                     alignment: FractionalOffset.bottomCenter,
                     child: Column(
                       children: <Widget>[
+                        ListTile(
+                          leading: Icon(Icons.account_tree),
+                          title: Text('Github'),
+                          onTap: () {
+                            html.window.open(GITHUB_URL, 'Github');
+                          },
+                        ),
                         Divider(),
                         ListTile(
                           title: FutureBuilder(
