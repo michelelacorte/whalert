@@ -1,5 +1,9 @@
 # Whalert
 
+<p align="center">
+  <img src="web/icons/Icon-512.jpg" />
+</p>
+
 ## Table of Contents
 
 1. [What's this](#1-whats)
