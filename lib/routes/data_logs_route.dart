@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
 import 'package:flutter_trading_volume/models/binance_trade_logs.dart';
-import 'package:flutter_trading_volume/utils/constants.dart';
 import 'package:flutter_trading_volume/utils/utils.dart';
-import 'package:universal_html/html.dart' as html;
 
 //TODO: Implement realtime data update.
 class DataLogsRoute extends StatefulWidget {
@@ -15,14 +12,28 @@ class DataLogsRoute extends StatefulWidget {
   DataLogsRoute({Key key, this.title, this.logs}) : super(key: key);
 
   @override
-  _DataLogsRouteState createState() => _DataLogsRouteState();
+  DataLogsRouteState createState() => DataLogsRouteState();
 }
 
-class _DataLogsRouteState extends State<DataLogsRoute> {
-
+class DataLogsRouteState extends State<DataLogsRoute> {
   bool _sortAscending = false;
+  List<BinanceTradeLogs> internalLog = [];
 
-  void _onSortValueColumn(int columnIndex, bool ascending) {
+  void addLogs(BinanceTradeLogs log) {
+    internalLog.add(log);
+    if(internalLog.length == 50) {
+      setState(() {
+        if(widget.logs.length == 200) {
+          widget.logs.clear();
+        }
+        widget.logs.addAll(internalLog);
+        _onSortValueColumn(true);
+        internalLog.clear();
+      });
+    }
+  }
+
+  void _onSortValueColumn(bool ascending) {
     setState(() {
       if (ascending) {
         widget.logs.sort((a, b) => a.value.compareTo(b.value));
@@ -32,7 +43,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
     });
   }
 
-  void _onSortQuantityColumn(int columnIndex, bool ascending) {
+  void _onSortQuantityColumn(bool ascending) {
     setState(() {
       if (ascending) {
         widget.logs.sort((a, b) => a.quantity.compareTo(b.quantity));
@@ -42,7 +53,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
     });
   }
 
-  void _onSortPriceColumn(int columnIndex, bool ascending) {
+  void _onSortPriceColumn(bool ascending) {
     setState(() {
       if (ascending) {
         widget.logs.sort((a, b) => a.price.compareTo(b.price));
@@ -52,12 +63,32 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
     });
   }
 
-  void _onSortTimeColumn(int columnIndex, bool ascending) {
+  void _onSortTimeColumn(bool ascending) {
     setState(() {
       if (ascending) {
         widget.logs.sort((a, b) => a.tradeTime.compareTo(b.tradeTime));
       } else {
         widget.logs.sort((a, b) => b.tradeTime.compareTo(a.tradeTime));
+      }
+    });
+  }
+
+  void _onSortPairColumn(bool ascending) {
+    setState(() {
+      if (ascending) {
+        widget.logs.sort((a, b) => a.symbol.compareTo(b.symbol));
+      } else {
+        widget.logs.sort((a, b) => b.symbol.compareTo(a.symbol));
+      }
+    });
+  }
+
+  void _onSortOrderTypeColumn(bool ascending) {
+    setState(() {
+      if (ascending) {
+        widget.logs.sort((a, b) => a.orderType.toShortString().compareTo(b.orderType.toShortString()));
+      } else {
+        widget.logs.sort((a, b) => b.orderType.toShortString().compareTo(a.orderType.toShortString()));
       }
     });
   }
@@ -116,6 +147,12 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         'Pair',
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
+                      onSort: (columnIndex, ascending) {
+                        _onSortPairColumn(_sortAscending);
+                        setState(() {
+                          _sortAscending = !_sortAscending;
+                        });
+                      },
                     ),
                     DataColumn(
                       numeric: false,
@@ -123,6 +160,12 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         'Type',
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
+                      onSort: (columnIndex, ascending) {
+                        _onSortOrderTypeColumn(_sortAscending);
+                        setState(() {
+                          _sortAscending = !_sortAscending;
+                        });
+                      },
                     ),
                     DataColumn(
                       numeric: true,
@@ -131,7 +174,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                       onSort: (columnIndex, ascending) {
-                        _onSortPriceColumn(columnIndex, _sortAscending);
+                        _onSortPriceColumn(_sortAscending);
                         setState(() {
                           _sortAscending = !_sortAscending;
                         });
@@ -144,7 +187,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                       onSort: (columnIndex, ascending) {
-                        _onSortQuantityColumn(columnIndex, _sortAscending);
+                        _onSortQuantityColumn(_sortAscending);
                         setState(() {
                           _sortAscending = !_sortAscending;
                         });
@@ -157,7 +200,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                       onSort: (columnIndex, ascending) {
-                        _onSortValueColumn(columnIndex, _sortAscending);
+                        _onSortValueColumn(_sortAscending);
                         setState(() {
                           _sortAscending = !_sortAscending;
                         });
@@ -170,7 +213,7 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                       onSort: (columnIndex, ascending) {
-                        _onSortTimeColumn(columnIndex, _sortAscending);
+                        _onSortTimeColumn(_sortAscending);
                         setState(() {
                           _sortAscending = !_sortAscending;
                         });
@@ -179,20 +222,21 @@ class _DataLogsRouteState extends State<DataLogsRoute> {
                   ],
                   rows: widget.logs.map(
                     ((element) => DataRow(
-                      cells: <DataCell>[
-                                DataCell(Text(element.symbol)),
-                                DataCell(Text(element.orderType.toShortString(),
-                                    style: TextStyle(
-                                        color:
-                                            element.orderType == OrderType.SELL
-                                                ? Colors.red
-                                                : Colors.green))),
-                                DataCell(Text(element.price.toString())),
-                                DataCell(Text(element.quantity.toString())),
-                                DataCell(Text(element.value.toString())),
-                                DataCell(Text(element.tradeTime)),
-                              ],
-                    )),
+                        cells: <DataCell>[
+                          DataCell(Text(element.symbol)),
+                          DataCell(Text(element.orderType.toShortString(),
+                              style: TextStyle(
+                                  color:
+                                  element.orderType == OrderType.SELL
+                                      ? Colors.red
+                                      : Colors.green))),
+                          DataCell(Text(element.price.toString())),
+                          DataCell(Text(element.quantity.toString())),
+                          DataCell(Text(element.value.toString())),
+                          DataCell(Text(element.tradeTime)),
+                        ],
+                      )
+                    ),
                   ).toList(),
                 ),
               ],

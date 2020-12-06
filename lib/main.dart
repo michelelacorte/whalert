@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_trading_volume/models/binance_ws.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
@@ -11,6 +12,7 @@ import 'models/binance_trade_logs.dart';
 import 'utils/constants.dart';
 import 'routes/donation_route.dart';
 import 'models/binance_trade.dart';
+import 'utils/decimal_text_input_formatter.dart';
 
 
 final snackBar_alreadyStarted =
@@ -25,6 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Whalert',
       theme: ThemeData(
         fontFamily: GoogleFonts.montserrat().fontFamily,
@@ -64,6 +67,10 @@ class _TradeHomePageState extends State<TradeHomePage> {
   String _currentPair = SUPPORTED_PAIRS[0];
   OrderType _currentOrderType = OrderType.SELL;
 
+  final GlobalKey<DataLogsRouteState> _callDataLogs = GlobalKey<DataLogsRouteState>();
+  DataLogsRoute _dataLogsRoute;
+
+
   void play() async {
     await audioPlayer.play('beep.mp3');
   }
@@ -71,6 +78,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
   @override
   void initState() {
     super.initState();
+    _dataLogsRoute = DataLogsRoute(title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
     _binanceWs = new BinanceWs(pair: _currentPair);
   }
 
@@ -138,13 +146,15 @@ class _TradeHomePageState extends State<TradeHomePage> {
         setState(() {
           _cumulativeQuantity += _data.quantity;
           _cumulativePrice += _data.price;
-          _collectedTrades.add(new BinanceTradeLogs(symbol: _data.symbol,
+          var bl = new BinanceTradeLogs(symbol: _data.symbol,
               price: _data.price,
               quantity: _data.quantity,
               value: (_data.price*_data.quantity),
               tradeTime: DateTime.fromMillisecondsSinceEpoch(_data.tradeTime).toString(),
-              orderType: _data.isBuyerMaker ? OrderType.SELL : OrderType.BUY)
-          );
+              orderType: _data.isBuyerMaker ? OrderType.SELL : OrderType.BUY);
+          _collectedTrades.add(bl);
+          if(_callDataLogs != null && _callDataLogs.currentState != null)
+            _callDataLogs.currentState.addLogs(bl);
         });
       }
     }
@@ -172,6 +182,163 @@ class _TradeHomePageState extends State<TradeHomePage> {
           widget.title,
           style: TextStyle(color: Colors.white),
         ),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              showDialog(context: context,
+                  builder: (BuildContext context) {
+                    return StatefulBuilder(
+                      builder: (context, setState) {
+                        return Stack(
+                          alignment: AlignmentDirectional.center,
+                          children: [
+                            Card(
+                              margin: EdgeInsets.all(64),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(height: 16),
+                                  ListTile(
+                                    title: Text('Settings',
+                                        style:
+                                        TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Text('Order Type: '),
+                                        DropdownButton<OrderType>(
+                                          value: _currentOrderType,
+                                          icon: Icon(Icons.arrow_downward),
+                                          iconSize: 24,
+                                          elevation: 16,
+                                          style: TextStyle(color: Theme.of(context).primaryColor),
+                                          underline: Container(
+                                            height: 2,
+                                            color: Theme.of(context).accentColor,
+                                          ),
+                                          onChanged: (OrderType newValue) {
+                                            setState(() {
+                                              if (_started) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(snackBar_alreadyStarted);
+                                              } else {
+                                                _data = null;
+                                                _currentOrderType = newValue;
+                                              }
+                                            });
+                                          },
+                                          items: OrderType.values
+                                              .map<DropdownMenuItem<OrderType>>((OrderType value) {
+                                            return DropdownMenuItem<OrderType>(
+                                              value: value,
+                                              child: Text(value.toShortString()),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Text('Current Pair: '),
+                                        DropdownButton<String>(
+                                          value: _currentPair,
+                                          icon: Icon(Icons.arrow_downward),
+                                          iconSize: 24,
+                                          elevation: 16,
+                                          style: TextStyle(color: Theme.of(context).primaryColor),
+                                          underline: Container(
+                                            height: 2,
+                                            color: Theme.of(context).accentColor,
+                                          ),
+                                          onChanged: (String newValue) {
+                                            setState(() {
+                                              if (_started) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(snackBar_alreadyStarted);
+                                              } else {
+                                                _data = null;
+                                                _currentPair = newValue;
+                                                _binanceWs.pair = newValue;
+                                              }
+                                            });
+                                          },
+                                          items: SUPPORTED_PAIRS
+                                              .map<DropdownMenuItem<String>>((String value) {
+                                            return DropdownMenuItem<String>(
+                                              value: value,
+                                              child: Text(value),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          Text('Min Log Volume ($_currentQtySliderValue): '),
+                                          SizedBox(
+                                            width: 150,
+                                            child: TextFormField(
+                                              initialValue: _currentQtySliderValue.toString(),
+                                              inputFormatters: [DecimalTextInputFormatter(decimalRange: 6)],
+                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _currentQtySliderValue = double.parse(value);
+                                                });
+                                              },// Only numbers can be entered
+                                            ),
+                                          ),
+                                        ]),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      ButtonTheme(
+                                        minWidth: 100.0,
+                                        height: 50.0,
+                                        child:   OutlineButton(
+                                          child: Text('Close', style: TextStyle(color: Theme.of(context).primaryColor)),
+                                          borderSide: BorderSide(
+                                            color: Theme.of(context).primaryColor,
+                                            style: BorderStyle.solid,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                    ],
+                                  ),
+                                  SizedBox(height: 16),
+                                ],
+                              ),
+                            )
+                          ],
+                        );
+                      },
+                    );
+                  }
+              );
+            },
+          )
+        ],
       ),
       body: ListView(
         children: [
@@ -190,119 +357,6 @@ class _TradeHomePageState extends State<TradeHomePage> {
                     subtitle: Text(
                         'This website is under development!\n\nData are fetched from Binance.',
                         style: TextStyle(color: Colors.white))),
-              ],
-            ),
-          ),
-          Card(
-            margin: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  title: Text('Settings',
-                      style:
-                      TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text('Order Type: '),
-                      DropdownButton<OrderType>(
-                        value: _currentOrderType,
-                        icon: Icon(Icons.arrow_downward),
-                        iconSize: 24,
-                        elevation: 16,
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                        underline: Container(
-                          height: 2,
-                          color: Theme.of(context).accentColor,
-                        ),
-                        onChanged: (OrderType newValue) {
-                          setState(() {
-                            if (_started) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar_alreadyStarted);
-                            } else {
-                              _data = null;
-                              _currentOrderType = newValue;
-                            }
-                          });
-                        },
-                        items: OrderType.values
-                            .map<DropdownMenuItem<OrderType>>((OrderType value) {
-                          return DropdownMenuItem<OrderType>(
-                            value: value,
-                            child: Text(value.toShortString()),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text('Current Pair: '),
-                      DropdownButton<String>(
-                        value: _currentPair,
-                        icon: Icon(Icons.arrow_downward),
-                        iconSize: 24,
-                        elevation: 16,
-                        style: TextStyle(color: Theme.of(context).primaryColor),
-                        underline: Container(
-                          height: 2,
-                          color: Theme.of(context).accentColor,
-                        ),
-                        onChanged: (String newValue) {
-                          setState(() {
-                            if (_started) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(snackBar_alreadyStarted);
-                            } else {
-                              _data = null;
-                              _currentPair = newValue;
-                              _binanceWs.pair = newValue;
-                            }
-                          });
-                        },
-                        items: SUPPORTED_PAIRS
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text('Min Log Volume ($_currentQtySliderValue): '),
-                        Expanded(
-                          child: Slider(
-                            activeColor: Theme.of(context).accentColor,
-                            value: _currentQtySliderValue,
-                            min: 0,
-                            max: 100,
-                            divisions: 10,
-                            label: _currentQtySliderValue.round().toString(),
-                            onChanged: (double value) {
-                              setState(() {
-                                _currentQtySliderValue = value;
-                              });
-                            },
-                          ),
-                        ),
-                      ]),
-                ),
               ],
             ),
           ),
@@ -357,7 +411,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => DataLogsRoute(title: 'Logs', logs: _collectedTrades)),
+                            MaterialPageRoute(builder: (context) => _dataLogsRoute),
                           );
                         },
                       ),
