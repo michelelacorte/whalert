@@ -47,6 +47,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/graphics/
+    - assets/graphics/drawer_header.jpg
     - pubspec.yaml
     - assets/beep.mp3
   # The following line ensures that the Material Icons font is

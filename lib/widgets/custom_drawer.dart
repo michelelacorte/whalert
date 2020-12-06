@@ -18,6 +18,15 @@ class CustomDrawer extends StatelessWidget {
       child: Container(
         child: Column(
           children: <Widget>[
+            DrawerHeader(
+              padding: EdgeInsets.zero,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('/graphics/drawer_header.jpg'),
+                    fit: BoxFit.cover
+                ),
+              ),
+            ),
             Expanded(
               child: Column(children: <Widget>[
                 ListTile(

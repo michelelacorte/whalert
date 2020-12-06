@@ -29,9 +29,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         fontFamily: GoogleFonts.montserrat().fontFamily,
         textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
-        primaryColor: Color.fromARGB(255, 37, 92, 153),
-        primaryColorDark: Color.fromARGB(255, 37, 92, 153),
-        accentColor: Color.fromARGB(255, 37, 92, 153),
+        primaryColor: Color.fromARGB(255, 14, 38, 72),
+        primaryColorDark: Color.fromARGB(255, 14, 38, 72),
+        accentColor: Color.fromARGB(255, 100, 207, 249),
       ),
       home: TradeHomePage(title: 'Whalert'),
     );
