@@ -255,8 +255,8 @@ class DataLogsRouteState extends State<DataLogsRoute> {
                                       ? Colors.red
                                       : Colors.green))),
                           DataCell(Text(element.price.toString())),
-                          DataCell(Text(element.quantity.toString())),
-                          DataCell(Text(element.value.toString())),
+                          DataCell(Text(humanReadableNumberGenerator(element.quantity))),
+                          DataCell(Text(humanReadableNumberGenerator(element.value))),
                           DataCell(Text(element.tradeTime)),
                         ],
                       )

@@ -7,7 +7,9 @@ import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/models/trades/bitmex_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
+import 'package:flutter_trading_volume/utils/utils.dart';
 import 'package:flutter_trading_volume/websockets/binance_socket.dart';
+import 'package:flutter_trading_volume/websockets/bitfinex_socket.dart';
 import 'package:flutter_trading_volume/websockets/bitmex_socket.dart';
 import 'package:flutter_trading_volume/websockets/bybit_socket.dart';
 import 'package:flutter_trading_volume/websockets/ftx_socket.dart';
@@ -62,6 +64,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
   FtxSocket _ftxSocket;
   ByBitSocket _byBitSocket;
   BitmexSocket _bitmexSocket;
+  BitfinexSocket _bitfinexSocket;
 
   AudioPlayer audioPlayer = AudioPlayer();
 
@@ -96,6 +99,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     _ftxSocket = new FtxSocket(pair: _currentPair);
     _byBitSocket = new ByBitSocket(pair: _currentPair);
     _bitmexSocket = new BitmexSocket(pair: _currentPair);
+    _bitfinexSocket = new BitfinexSocket(pair: _currentPair);
   }
 
   void _connectToSocket() {
@@ -113,6 +117,9 @@ class _TradeHomePageState extends State<TradeHomePage> {
     if(_bitmexSocket.socket == null){
       _bitmexSocket.connect();
     }
+    if(_bitfinexSocket.socket == null){
+      _bitfinexSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
@@ -121,6 +128,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     _ftxSocket.closeConnection();
     _byBitSocket.closeConnection();
     _bitmexSocket.closeConnection();
+    _bitfinexSocket.closeConnection();
   }
 
   void _listenForDataUpdate() {
@@ -150,6 +158,15 @@ class _TradeHomePageState extends State<TradeHomePage> {
         var trade = BitmexTrade.fromJson(event.toString());
         _updateData(trade);
         if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
+      });
+    });
+    //TODO: WIP
+    _bitfinexSocket.socket.stream.listen((event) {
+      setState(() {
+        print(event);
+        //var trade = BitmexTrade.fromJson(event.toString());
+        //_updateData(trade);
+        //if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
       });
     });
   }
@@ -377,6 +394,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                                 _ftxSocket.pair = newValue;
                                                 _byBitSocket.pair = newValue;
                                                 _bitmexSocket.pair = newValue;
+                                                _bitfinexSocket.pair = newValue;
                                               }
                                             });
                                           },
@@ -462,7 +480,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                             fontSize: 24,
                             color: Colors.white)),
                     subtitle: Text(
-                        'This website is under development!',
+                        'This website is under development!\n\nCurrent supported exchange: Binance, FTX, ByBit, BitMEX',
                         style: TextStyle(color: Colors.white))),
               ],
             ),
@@ -481,13 +499,13 @@ class _TradeHomePageState extends State<TradeHomePage> {
                 ),
                 ListTile(
                   title: Text(
-                      'Price: ${_averagePrice() ?? 0}\$'),
+                      'Price: ${_averagePrice().toStringAsFixed(4) ?? 0}\$'),
                   subtitle: Text(
-                      'Quantity executed: ${_cumulativeQuantity.toStringAsFixed(4)}'),
+                      'Quantity executed: ${humanReadableNumberGenerator(_cumulativeQuantity)}'),
                 ),
                 ListTile(
                   title: Text(
-                      'Cumulative Value: ${_cumulativePrice.toStringAsFixed(4)}\$'),
+                      'Cumulative Value: ${humanReadableNumberGenerator(_cumulativePrice)}\$'),
                 ),
                 ListTile(
                   title: Text(
