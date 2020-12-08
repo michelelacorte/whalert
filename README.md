@@ -29,6 +29,10 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.1.0+1
+	- Added FTX, ByBit and BitMEX exchange.
+	- Bugfix
+
 - v0.0.2+1
 
 	- Added realtime update of logs (for now list has maxSize of 200 rows)
