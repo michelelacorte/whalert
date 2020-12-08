@@ -29,6 +29,12 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.0.2+1
+
+	- Added realtime update of logs (for now list has maxSize of 200 rows)
+	- Added possibility to enter manual value of quantity to log
+	- UI Refactor
+
 - v0.0.1+1
 	- First public commit
 
