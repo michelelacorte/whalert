@@ -21,4 +21,7 @@ extension toString on SupportedPairs {
   String toStringUSD() {
     return this.toString().split('.').last.replaceAll('_', '').replaceAll('USDT', 'USD');
   }
+  String toStringBitMex() {
+    return this.toString().split('.').last.replaceAll('_', '').replaceAll('USDT', 'USD').replaceAll('BTC', 'XBT');
+  }
 }

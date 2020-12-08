@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
+import 'package:flutter_trading_volume/models/trades/bitmex_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
 import 'package:flutter_trading_volume/websockets/binance_socket.dart';
+import 'package:flutter_trading_volume/websockets/bitmex_socket.dart';
 import 'package:flutter_trading_volume/websockets/bybit_socket.dart';
 import 'package:flutter_trading_volume/websockets/ftx_socket.dart';
 import 'package:flutter_trading_volume/widgets/custom_drawer.dart';
@@ -59,6 +61,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
   BinanceSocket _binanceSocket;
   FtxSocket _ftxSocket;
   ByBitSocket _byBitSocket;
+  BitmexSocket _bitmexSocket;
 
   AudioPlayer audioPlayer = AudioPlayer();
 
@@ -92,6 +95,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     _binanceSocket = new BinanceSocket(pair: _currentPair);
     _ftxSocket = new FtxSocket(pair: _currentPair);
     _byBitSocket = new ByBitSocket(pair: _currentPair);
+    _bitmexSocket = new BitmexSocket(pair: _currentPair);
   }
 
   void _connectToSocket() {
@@ -106,6 +110,9 @@ class _TradeHomePageState extends State<TradeHomePage> {
     if(_byBitSocket.socket == null){
       _byBitSocket.connect();
     }
+    if(_bitmexSocket.socket == null){
+      _bitmexSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
@@ -113,6 +120,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     _binanceSocket.closeConnection();
     _ftxSocket.closeConnection();
     _byBitSocket.closeConnection();
+    _bitmexSocket.closeConnection();
   }
 
   void _listenForDataUpdate() {
@@ -135,6 +143,13 @@ class _TradeHomePageState extends State<TradeHomePage> {
         var trade = ByBitTrade.fromJson(event.toString());
         _updateData(trade);
         if(trade != null) _prices[BYBIT_PRICE_ID] = trade.price;
+      });
+    });
+    _bitmexSocket.socket.stream.listen((event) {
+      setState(() {
+        var trade = BitmexTrade.fromJson(event.toString());
+        _updateData(trade);
+        if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
       });
     });
   }
@@ -191,12 +206,12 @@ class _TradeHomePageState extends State<TradeHomePage> {
     if (trade != null) {
       if (trade.quantity >= _currentQtySliderValue && _shouldLog(trade)) {
         //Set minimum qty to prevent beep on low qty orders.
-        if(_currentQtySliderValue >= 10) {
+        if(_currentQtySliderValue >= 100) {
           audioPlayer.play('assets/beep.mp3', isLocal: true);
         }
         setState(() {
           _cumulativeQuantity += trade.quantity;
-          _cumulativePrice += trade.price;
+          _cumulativePrice += (trade.price*trade.quantity);
           var bl = new TradeLogs(
               market: trade.market,
               symbol: trade.symbol,
@@ -360,6 +375,8 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                                 _currentPair = newValue;
                                                 _binanceSocket.pair = newValue;
                                                 _ftxSocket.pair = newValue;
+                                                _byBitSocket.pair = newValue;
+                                                _bitmexSocket.pair = newValue;
                                               }
                                             });
                                           },
