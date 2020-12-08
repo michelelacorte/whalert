@@ -1,7 +1,7 @@
 import 'dart:convert';
-
-import 'package:flutter_trading_volume/models/base_trade.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
+
+import 'base_trade.dart';
 
 class FtxTradeData {
   final int id;
@@ -64,7 +64,7 @@ class FtxTrade extends BaseTrade{
       symbol: jsonData['market'] as String,
       price: tradeData != null ? tradeData[0].price ?? 0 : 0,
       quantity: tradeData != null ? tradeData[0].size ?? 0 : 0,
-      orderType: tradeData != null ? (tradeData[0].side == 'buy' ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
+      orderType: tradeData != null ? (tradeData[0].side.contains('buy') ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
       liquidation: tradeData != null ? (tradeData[0].liquidation != null ? tradeData[0].liquidation : false) : false,
       tradeTime: tradeData != null ? tradeData[0].time : '0',
     );

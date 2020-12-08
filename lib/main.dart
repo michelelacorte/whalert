@@ -2,20 +2,21 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_trading_volume/models/base_trade.dart';
-import 'package:flutter_trading_volume/models/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
-import 'package:flutter_trading_volume/models/supported_exchange.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
+import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
 import 'package:flutter_trading_volume/websockets/binance_socket.dart';
+import 'package:flutter_trading_volume/websockets/bybit_socket.dart';
 import 'package:flutter_trading_volume/websockets/ftx_socket.dart';
 import 'package:flutter_trading_volume/widgets/custom_drawer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/trade_logs.dart';
+import 'models/trades/base_trade.dart';
+import 'models/trades/ftx_trade.dart';
 import 'utils/constants.dart';
 import 'routes/donation_route.dart';
-import 'models/binance_trade.dart';
+import 'models/trades/binance_trade.dart';
 import 'utils/decimal_text_input_formatter.dart';
 
 
@@ -57,6 +58,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
   //Sockets
   BinanceSocket _binanceSocket;
   FtxSocket _ftxSocket;
+  ByBitSocket _byBitSocket;
 
   AudioPlayer audioPlayer = AudioPlayer();
 
@@ -89,6 +91,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     _dataLogsRoute = DataLogsRoute(title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
     _binanceSocket = new BinanceSocket(pair: _currentPair);
     _ftxSocket = new FtxSocket(pair: _currentPair);
+    _byBitSocket = new ByBitSocket(pair: _currentPair);
   }
 
   void _connectToSocket() {
@@ -100,12 +103,16 @@ class _TradeHomePageState extends State<TradeHomePage> {
         (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.FTX)*/) {
       _ftxSocket.connect();
     }
+    if(_byBitSocket.socket == null){
+      _byBitSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
   void _closeConnection() {
     _binanceSocket.closeConnection();
     _ftxSocket.closeConnection();
+    _byBitSocket.closeConnection();
   }
 
   void _listenForDataUpdate() {
@@ -121,6 +128,13 @@ class _TradeHomePageState extends State<TradeHomePage> {
         var trade = FtxTrade.fromJson(event.toString());
         _updateData(trade);
         if(trade != null) _prices[FTX_PRICE_ID] = trade.price;
+      });
+    });
+    _byBitSocket.socket.stream.listen((event) {
+      setState(() {
+        var trade = ByBitTrade.fromJson(event.toString());
+        _updateData(trade);
+        if(trade != null) _prices[BYBIT_PRICE_ID] = trade.price;
       });
     });
   }

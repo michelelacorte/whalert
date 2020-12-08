@@ -4,3 +4,4 @@ const EXPORT_CSV_FILENAME = 'export.csv';
 
 const BINANCE_PRICE_ID = 1;
 const FTX_PRICE_ID = 2;
+const BYBIT_PRICE_ID = 3;

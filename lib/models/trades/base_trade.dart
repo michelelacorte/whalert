@@ -1,4 +1,4 @@
-import 'order_type.dart';
+import '../order_type.dart';
 
 class BaseTrade {
   final String market;

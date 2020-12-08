@@ -1,7 +1,5 @@
 import 'dart:convert';
-
 import 'package:flutter_trading_volume/models/order_type.dart';
-
 import 'base_trade.dart';
 
 class BinanceTrade extends BaseTrade {

@@ -18,4 +18,7 @@ extension toString on SupportedPairs {
   String toStringWithCustomReplace(String char) {
     return this.toString().split('.').last.replaceAll('_', char);
   }
+  String toStringUSD() {
+    return this.toString().split('.').last.replaceAll('_', '').replaceAll('USDT', 'USD');
+  }
 }
