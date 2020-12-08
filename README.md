@@ -29,6 +29,9 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.1.1+1
+	- Added human readable format for long values.
+
 - v0.1.0+1
 	- Added FTX, ByBit and BitMEX exchange.
 	- Bugfix
