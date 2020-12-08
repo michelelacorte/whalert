@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_trading_volume/models/base_trade.dart';
 import 'package:flutter_trading_volume/models/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
+import 'package:flutter_trading_volume/models/supported_exchange.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
 import 'package:flutter_trading_volume/websockets/binance_socket.dart';
@@ -72,6 +73,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
 
   SupportedPairs _currentPair = SupportedPairs.BTC_USDT;
   OrderType _currentOrderType = OrderType.SELL;
+  //SupportedExchange _currentExchange = SupportedExchange.ALL;
 
   final GlobalKey<DataLogsRouteState> _callDataLogs = GlobalKey<DataLogsRouteState>();
   DataLogsRoute _dataLogsRoute;
@@ -90,10 +92,12 @@ class _TradeHomePageState extends State<TradeHomePage> {
   }
 
   void _connectToSocket() {
-    if (_binanceSocket.socket == null) {
+    if (_binanceSocket.socket == null/* &&
+        (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.BINANCE)*/) {
       _binanceSocket.connect();
     }
-    if (_ftxSocket.socket == null) {
+    if (_ftxSocket.socket == null/* &&
+        (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.FTX)*/) {
       _ftxSocket.connect();
     }
     _listenForDataUpdate();
@@ -158,6 +162,11 @@ class _TradeHomePageState extends State<TradeHomePage> {
 
   double _averagePrice() {
     double sum = 0;
+    if(_prices.length == 0) {
+      return sum;
+    } else if (_prices.length == 1) {
+      return _prices[0];
+    }
     _prices.forEach((key, value) {
         sum += value;
     });
@@ -237,6 +246,44 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                         style:
                                         TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
                                   ),
+                                  //Not enabled for now
+                                  /*Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Text('Exchange: '),
+                                        DropdownButton<SupportedExchange>(
+                                          value: _currentExchange,
+                                          icon: Icon(Icons.arrow_downward),
+                                          iconSize: 24,
+                                          elevation: 16,
+                                          style: TextStyle(color: Theme.of(context).primaryColor),
+                                          underline: Container(
+                                            height: 2,
+                                            color: Theme.of(context).accentColor,
+                                          ),
+                                          onChanged: (SupportedExchange newValue) {
+                                            setState(() {
+                                              if (_started) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(snackBar_alreadyStarted);
+                                              } else {
+                                                _currentExchange = newValue;
+                                              }
+                                            });
+                                          },
+                                          items: SupportedExchange.values
+                                              .map<DropdownMenuItem<SupportedExchange>>((SupportedExchange value) {
+                                            return DropdownMenuItem<SupportedExchange>(
+                                              value: value,
+                                              child: Text(value.toShortString()),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),*/
                                   Padding(
                                     padding: EdgeInsets.all(16),
                                     child: Row(
@@ -384,7 +431,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                             fontSize: 24,
                             color: Colors.white)),
                     subtitle: Text(
-                        'This website is under development!\n\nData are fetched from Binance.',
+                        'This website is under development!',
                         style: TextStyle(color: Colors.white))),
               ],
             ),
