@@ -4,7 +4,68 @@ import 'package:flutter_trading_volume/models/order_type.dart';
 import 'package:flutter_trading_volume/models/trade_logs.dart';
 import 'package:flutter_trading_volume/utils/utils.dart';
 
-//TODO: Implement realtime data update.
+class DataLogsSource extends DataTableSource {
+  final List<TradeLogs> logs;
+
+  DataLogsSource({this.logs});
+
+  void updateLogs(List<TradeLogs> updated) {
+    logs.addAll(updated);
+    notifyListeners();
+  }
+
+  void _sort<T>(Comparable<T> getField(TradeLogs d), bool ascending) {
+    logs.sort((TradeLogs a, TradeLogs b) {
+      if (!ascending) {
+        final TradeLogs c = a;
+        a = b;
+        b = c;
+      }
+      final Comparable<T> aValue = getField(a);
+      final Comparable<T> bValue = getField(b);
+      return Comparable.compare(aValue, bValue);
+    });
+    notifyListeners();
+  }
+
+  int _selectedCount = 0;
+
+  @override
+  DataRow getRow(int index) {
+    assert(index >= 0);
+    if (index >= logs.length)
+      return null;
+    final TradeLogs element = logs[index];
+    return new DataRow.byIndex(
+        index: index,
+        cells: <DataCell>[
+          DataCell(Text(element.market)),
+          DataCell(Text(element.symbol)),
+          DataCell(Text(element.orderType.toShortString(),
+              style: TextStyle(
+                  color:
+                  element.orderType == OrderType.SELL
+                      ? Colors.red
+                      : Colors.green))),
+          DataCell(Text(element.price.toString())),
+          DataCell(Text(humanReadableNumberGenerator(element.quantity))),
+          DataCell(Text(humanReadableNumberGenerator(element.value))),
+          DataCell(Text(element.tradeTime)),
+        ]
+    );
+  }
+
+  @override
+  int get rowCount => logs.length;
+
+  @override
+  bool get isRowCountApproximate => false;
+
+  @override
+  int get selectedRowCount => _selectedCount;
+
+}
+
 class DataLogsRoute extends StatefulWidget {
   final String title;
   final List<TradeLogs> logs;
@@ -18,88 +79,35 @@ class DataLogsRoute extends StatefulWidget {
 class DataLogsRouteState extends State<DataLogsRoute> {
   bool _sortAscending = false;
   List<TradeLogs> internalLog = [];
+  DataLogsSource _logsDataSource;
+  int _sortColumnIndex;
+
+  @override
+  void initState(){
+    super.initState();
+    _logsDataSource = new DataLogsSource(logs: widget.logs);
+  }
 
   void addLogs(TradeLogs log) {
     internalLog.add(log);
-    if(internalLog.length == 50) {
+    if(internalLog.length == 10) {
       setState(() {
-        if(widget.logs.length == 200) {
+        /*if(widget.logs.length == 200) {
           widget.logs.clear();
-        }
+        }*/
         widget.logs.addAll(internalLog);
-        _onSortValueColumn(true);
+        _logsDataSource.updateLogs(internalLog);
+        _sort<String>((TradeLogs t) => t.tradeTime, 0, false);
         internalLog.clear();
       });
     }
   }
 
-  void _onSortValueColumn(bool ascending) {
+  void _sort<T>(Comparable<T> getField(TradeLogs d), int columnIndex, bool ascending) {
+    _logsDataSource._sort<T>(getField, ascending);
     setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.value.compareTo(b.value));
-      } else {
-        widget.logs.sort((a, b) => b.value.compareTo(a.value));
-      }
-    });
-  }
-
-  void _onSortQuantityColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.quantity.compareTo(b.quantity));
-      } else {
-        widget.logs.sort((a, b) => b.quantity.compareTo(a.quantity));
-      }
-    });
-  }
-
-  void _onSortPriceColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.price.compareTo(b.price));
-      } else {
-        widget.logs.sort((a, b) => b.price.compareTo(a.price));
-      }
-    });
-  }
-
-  void _onSortTimeColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.tradeTime.compareTo(b.tradeTime));
-      } else {
-        widget.logs.sort((a, b) => b.tradeTime.compareTo(a.tradeTime));
-      }
-    });
-  }
-
-  void _onSortPairColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.symbol.compareTo(b.symbol));
-      } else {
-        widget.logs.sort((a, b) => b.symbol.compareTo(a.symbol));
-      }
-    });
-  }
-
-  void _onSortOrderTypeColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.orderType.toShortString().compareTo(b.orderType.toShortString()));
-      } else {
-        widget.logs.sort((a, b) => b.orderType.toShortString().compareTo(a.orderType.toShortString()));
-      }
-    });
-  }
-
-  void _onSortExchangeColumn(bool ascending) {
-    setState(() {
-      if (ascending) {
-        widget.logs.sort((a, b) => a.market.compareTo(b.market));
-      } else {
-        widget.logs.sort((a, b) => b.market.compareTo(a.market));
-      }
+      _sortColumnIndex = columnIndex;
+      _sortAscending = ascending;
     });
   }
 
@@ -132,139 +140,85 @@ class DataLogsRouteState extends State<DataLogsRoute> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: _exportAsCsv,
-          backgroundColor: Theme.of(context).accentColor,
-          child: Icon(Icons.download_outlined,
-            color: Colors.white,
-          ),
+        backgroundColor: Theme.of(context).accentColor,
+        child: Icon(Icons.download_outlined,
+          color: Colors.white,
+        ),
       ),
       body: ListView(
         children: [
-          Card(
-            margin: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DataTable(
-                  sortAscending: _sortAscending,
-                  sortColumnIndex: 0,
-                  columns: [
-                    DataColumn(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PaginatedDataTable(
+                rowsPerPage: 15,
+                sortColumnIndex: _sortColumnIndex,
+                sortAscending: _sortAscending,
+                columns: [
+                  DataColumn(
                       numeric: false,
                       label: Text(
                         'Exchange',
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortExchangeColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                      onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.market, columnIndex, ascending)
+                  ),
+                  DataColumn(
+                    numeric: false,
+                    label: Text(
+                      'Pair',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: false,
-                      label: Text(
-                        'Pair',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortPairColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.symbol, columnIndex, ascending),
+                  ),
+                  DataColumn(
+                    numeric: false,
+                    label: Text(
+                      'Type',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: false,
-                      label: Text(
-                        'Type',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortOrderTypeColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.orderType.toShortString(), columnIndex, ascending),
+                  ),
+                  DataColumn(
+                    numeric: true,
+                    label: Text(
+                      'Price (\$)',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: true,
-                      label: Text(
-                        'Price (\$)',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortPriceColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.price.toString(), columnIndex, ascending),
+                  ),
+                  DataColumn(
+                    numeric: true,
+                    label: Text(
+                      'Quantity',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: true,
-                      label: Text(
-                        'Quantity',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortQuantityColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.quantity.toString(), columnIndex, ascending),
+                  ),
+                  DataColumn(
+                    numeric: true,
+                    label: Text(
+                      'Value (\$)',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: true,
-                      label: Text(
-                        'Value (\$)',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortValueColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.value.toString(), columnIndex, ascending),
+                  ),
+                  DataColumn(
+                    numeric: false,
+                    label: Text(
+                      'Time',
+                      style: TextStyle(fontStyle: FontStyle.italic),
                     ),
-                    DataColumn(
-                      numeric: false,
-                      label: Text(
-                        'Time',
-                        style: TextStyle(fontStyle: FontStyle.italic),
-                      ),
-                      onSort: (columnIndex, ascending) {
-                        _onSortTimeColumn(_sortAscending);
-                        setState(() {
-                          _sortAscending = !_sortAscending;
-                        });
-                      },
-                    ),
-                  ],
-                  rows: widget.logs.map(
-                    ((element) => DataRow(
-                        cells: <DataCell>[
-                          DataCell(Text(element.market)),
-                          DataCell(Text(element.symbol)),
-                          DataCell(Text(element.orderType.toShortString(),
-                              style: TextStyle(
-                                  color:
-                                  element.orderType == OrderType.SELL
-                                      ? Colors.red
-                                      : Colors.green))),
-                          DataCell(Text(element.price.toString())),
-                          DataCell(Text(humanReadableNumberGenerator(element.quantity))),
-                          DataCell(Text(humanReadableNumberGenerator(element.value))),
-                          DataCell(Text(element.tradeTime)),
-                        ],
-                      )
-                    ),
-                  ).toList(),
-                ),
-              ],
-            ),
+                    onSort: (columnIndex, ascending) => _sort<String>((TradeLogs t) => t.tradeTime, columnIndex, ascending),
+                  ),
+                ],
+                source: _logsDataSource,
+              ),
+            ],
           )
         ],
       ),

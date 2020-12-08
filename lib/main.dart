@@ -211,7 +211,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
     if(_prices.length == 0) {
       return sum;
     } else if (_prices.length == 1) {
-      return _prices[0];
+      return _prices[0] ?? 0;
     }
     _prices.forEach((key, value) {
         sum += value;
