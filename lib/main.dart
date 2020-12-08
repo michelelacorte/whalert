@@ -2,13 +2,16 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_trading_volume/models/binance_ws.dart';
+import 'package:flutter_trading_volume/models/base_trade.dart';
+import 'package:flutter_trading_volume/models/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
+import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
+import 'package:flutter_trading_volume/websockets/binance_socket.dart';
+import 'package:flutter_trading_volume/websockets/ftx_socket.dart';
 import 'package:flutter_trading_volume/widgets/custom_drawer.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:web_socket_channel/html.dart';
-import 'models/binance_trade_logs.dart';
+import 'models/trade_logs.dart';
 import 'utils/constants.dart';
 import 'routes/donation_route.dart';
 import 'models/binance_trade.dart';
@@ -50,12 +53,15 @@ class TradeHomePage extends StatefulWidget {
 }
 
 class _TradeHomePageState extends State<TradeHomePage> {
-  AudioPlayer audioPlayer = AudioPlayer();
-  HtmlWebSocketChannel _socket;
-  BinanceTrade _data;
-  BinanceWs _binanceWs;
+  //Sockets
+  BinanceSocket _binanceSocket;
+  FtxSocket _ftxSocket;
 
-  List<BinanceTradeLogs> _collectedTrades = [];
+  AudioPlayer audioPlayer = AudioPlayer();
+
+
+  List<TradeLogs> _collectedTrades = [];
+  Map<int, double> _prices = new Map();
 
   String _startTime = 'NoTime';
   String _endTime = 'NoTime';
@@ -64,7 +70,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
   double _cumulativePrice = 0;
   double _currentQtySliderValue = 10;
 
-  String _currentPair = SUPPORTED_PAIRS[0];
+  SupportedPairs _currentPair = SupportedPairs.BTC_USDT;
   OrderType _currentOrderType = OrderType.SELL;
 
   final GlobalKey<DataLogsRouteState> _callDataLogs = GlobalKey<DataLogsRouteState>();
@@ -79,19 +85,38 @@ class _TradeHomePageState extends State<TradeHomePage> {
   void initState() {
     super.initState();
     _dataLogsRoute = DataLogsRoute(title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
-    _binanceWs = new BinanceWs(pair: _currentPair);
+    _binanceSocket = new BinanceSocket(pair: _currentPair);
+    _ftxSocket = new FtxSocket(pair: _currentPair);
   }
 
   void _connectToSocket() {
-    _socket = HtmlWebSocketChannel.connect(_binanceWs.wsUrl());
+    if (_binanceSocket.socket == null) {
+      _binanceSocket.connect();
+    }
+    if (_ftxSocket.socket == null) {
+      _ftxSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
+  void _closeConnection() {
+    _binanceSocket.closeConnection();
+    _ftxSocket.closeConnection();
+  }
+
   void _listenForDataUpdate() {
-    _socket.stream.listen((event) {
+    _binanceSocket.socket.stream.listen((event) {
       setState(() {
-        _data = BinanceTrade.fromJson(event.toString());
-        _updateData();
+        var trade = BinanceTrade.fromJson(event.toString());
+        _updateData(trade);
+        if(trade != null) _prices[BINANCE_PRICE_ID] = trade.price;
+      });
+    });
+    _ftxSocket.socket.stream.listen((event) {
+      setState(() {
+        var trade = FtxTrade.fromJson(event.toString());
+        _updateData(trade);
+        if(trade != null) _prices[FTX_PRICE_ID] = trade.price;
       });
     });
   }
@@ -99,59 +124,64 @@ class _TradeHomePageState extends State<TradeHomePage> {
   void _startStopSocket() {
     if (!_started) {
       setState(() {
-        _data = null;
         _cumulativeQuantity = 0;
         _cumulativePrice = 0;
         _endTime = '';
         _startTime = DateTime.now().toString();
         _started = true;
       });
-      if (_socket == null) {
-        _connectToSocket();
-      }
-      _socket.sink.add(_binanceWs.wsSubscribeMessage());
+      _connectToSocket();
     } else {
       setState(() {
         _endTime = DateTime.now().toString();
         _started = false;
       });
-      _socket.sink.close();
-      _socket = null;
+      _closeConnection();
     }
   }
 
-  bool _shouldLog() {
+  bool _shouldLog(BaseTrade trade) {
     var shouldLog = false;
     switch (_currentOrderType) {
       case OrderType.ALL:
         shouldLog = true;
         break;
       case OrderType.BUY:
-        shouldLog = !_data.isBuyerMaker;
+        shouldLog = trade.orderType == OrderType.BUY;
         break;
       case OrderType.SELL:
-        shouldLog = _data.isBuyerMaker;
+        shouldLog = trade.orderType == OrderType.SELL;
         break;
     }
     return shouldLog;
   }
 
-  void _updateData() {
-    if (_data != null) {
-      if (_data.quantity >= _currentQtySliderValue && _shouldLog()) {
+  double _averagePrice() {
+    double sum = 0;
+    _prices.forEach((key, value) {
+        sum += value;
+    });
+    return sum/_prices.length;
+  }
+
+  void _updateData(BaseTrade trade) {
+    if (trade != null) {
+      if (trade.quantity >= _currentQtySliderValue && _shouldLog(trade)) {
         //Set minimum qty to prevent beep on low qty orders.
         if(_currentQtySliderValue >= 10) {
           audioPlayer.play('assets/beep.mp3', isLocal: true);
         }
         setState(() {
-          _cumulativeQuantity += _data.quantity;
-          _cumulativePrice += _data.price;
-          var bl = new BinanceTradeLogs(symbol: _data.symbol,
-              price: _data.price,
-              quantity: _data.quantity,
-              value: (_data.price*_data.quantity),
-              tradeTime: DateTime.fromMillisecondsSinceEpoch(_data.tradeTime).toString(),
-              orderType: _data.isBuyerMaker ? OrderType.SELL : OrderType.BUY);
+          _cumulativeQuantity += trade.quantity;
+          _cumulativePrice += trade.price;
+          var bl = new TradeLogs(
+              market: trade.market,
+              symbol: trade.symbol,
+              price: trade.price,
+              quantity: trade.quantity,
+              value: (trade.price*trade.quantity),
+              tradeTime: trade.tradeTime,
+              orderType: trade.orderType);
           _collectedTrades.add(bl);
           if(_callDataLogs != null && _callDataLogs.currentState != null)
             _callDataLogs.currentState.addLogs(bl);
@@ -229,17 +259,16 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(snackBar_alreadyStarted);
                                               } else {
-                                                _data = null;
                                                 _currentOrderType = newValue;
                                               }
                                             });
                                           },
                                           items: OrderType.values
                                               .map<DropdownMenuItem<OrderType>>((OrderType value) {
-                                            return DropdownMenuItem<OrderType>(
-                                              value: value,
-                                              child: Text(value.toShortString()),
-                                            );
+                                                  return DropdownMenuItem<OrderType>(
+                                                    value: value,
+                                                    child: Text(value.toShortString()),
+                                                  );
                                           }).toList(),
                                         ),
                                       ],
@@ -251,7 +280,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       children: [
                                         Text('Current Pair: '),
-                                        DropdownButton<String>(
+                                        DropdownButton<SupportedPairs>(
                                           value: _currentPair,
                                           icon: Icon(Icons.arrow_downward),
                                           iconSize: 24,
@@ -261,23 +290,23 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                             height: 2,
                                             color: Theme.of(context).accentColor,
                                           ),
-                                          onChanged: (String newValue) {
+                                          onChanged: (SupportedPairs newValue) {
                                             setState(() {
                                               if (_started) {
                                                 ScaffoldMessenger.of(context)
                                                     .showSnackBar(snackBar_alreadyStarted);
                                               } else {
-                                                _data = null;
                                                 _currentPair = newValue;
-                                                _binanceWs.pair = newValue;
+                                                _binanceSocket.pair = newValue;
+                                                _ftxSocket.pair = newValue;
                                               }
                                             });
                                           },
-                                          items: SUPPORTED_PAIRS
-                                              .map<DropdownMenuItem<String>>((String value) {
-                                            return DropdownMenuItem<String>(
+                                          items: SupportedPairs.values
+                                              .map<DropdownMenuItem<SupportedPairs>>((SupportedPairs value) {
+                                            return DropdownMenuItem<SupportedPairs>(
                                               value: value,
-                                              child: Text(value),
+                                              child: Text(value.toShortString()),
                                             );
                                           }).toList(),
                                         ),
@@ -291,7 +320,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                         children: [
                                           Text('Min Log Volume ($_currentQtySliderValue): '),
                                           SizedBox(
-                                            width: 150,
+                                            width: 75,
                                             child: TextFormField(
                                               initialValue: _currentQtySliderValue.toString(),
                                               inputFormatters: [DecimalTextInputFormatter(decimalRange: 6)],
@@ -368,15 +397,13 @@ class _TradeHomePageState extends State<TradeHomePage> {
                 SizedBox(height: 32),
                 ListTile(
                   title: Text(
-                    _data != null
-                        ? (_data.symbol ?? _currentPair)
-                        : _currentPair,
+                    _currentPair.toShortString(),
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                   ),
                 ),
                 ListTile(
                   title: Text(
-                      'Price: ${_data != null ? (_data.price ?? 0) : 0}\$'),
+                      'Price: ${_averagePrice() ?? 0}\$'),
                   subtitle: Text(
                       'Quantity executed: ${_cumulativeQuantity.toStringAsFixed(4)}'),
                 ),

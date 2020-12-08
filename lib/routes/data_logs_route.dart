@@ -1,13 +1,13 @@
 import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
-import 'package:flutter_trading_volume/models/binance_trade_logs.dart';
+import 'package:flutter_trading_volume/models/trade_logs.dart';
 import 'package:flutter_trading_volume/utils/utils.dart';
 
 //TODO: Implement realtime data update.
 class DataLogsRoute extends StatefulWidget {
   final String title;
-  final List<BinanceTradeLogs> logs;
+  final List<TradeLogs> logs;
 
   DataLogsRoute({Key key, this.title, this.logs}) : super(key: key);
 
@@ -17,9 +17,9 @@ class DataLogsRoute extends StatefulWidget {
 
 class DataLogsRouteState extends State<DataLogsRoute> {
   bool _sortAscending = false;
-  List<BinanceTradeLogs> internalLog = [];
+  List<TradeLogs> internalLog = [];
 
-  void addLogs(BinanceTradeLogs log) {
+  void addLogs(TradeLogs log) {
     internalLog.add(log);
     if(internalLog.length == 50) {
       setState(() {
@@ -93,6 +93,16 @@ class DataLogsRouteState extends State<DataLogsRoute> {
     });
   }
 
+  void _onSortExchangeColumn(bool ascending) {
+    setState(() {
+      if (ascending) {
+        widget.logs.sort((a, b) => a.market.compareTo(b.market));
+      } else {
+        widget.logs.sort((a, b) => b.market.compareTo(a.market));
+      }
+    });
+  }
+
   void _exportAsCsv() {
     List<List<dynamic>> rows = List<List<dynamic>>();
     //Adding header, maybe we can improve this...
@@ -141,6 +151,19 @@ class DataLogsRouteState extends State<DataLogsRoute> {
                   sortAscending: _sortAscending,
                   sortColumnIndex: 0,
                   columns: [
+                    DataColumn(
+                      numeric: false,
+                      label: Text(
+                        'Exchange',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                      onSort: (columnIndex, ascending) {
+                        _onSortExchangeColumn(_sortAscending);
+                        setState(() {
+                          _sortAscending = !_sortAscending;
+                        });
+                      },
+                    ),
                     DataColumn(
                       numeric: false,
                       label: Text(
@@ -223,6 +246,7 @@ class DataLogsRouteState extends State<DataLogsRoute> {
                   rows: widget.logs.map(
                     ((element) => DataRow(
                         cells: <DataCell>[
+                          DataCell(Text(element.market)),
                           DataCell(Text(element.symbol)),
                           DataCell(Text(element.orderType.toShortString(),
                               style: TextStyle(

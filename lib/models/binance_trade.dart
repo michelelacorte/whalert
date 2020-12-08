@@ -1,28 +1,28 @@
 import 'dart:convert';
 
-class BinanceTrade {
+import 'package:flutter_trading_volume/models/order_type.dart';
+
+import 'base_trade.dart';
+
+class BinanceTrade extends BaseTrade {
   final String eventType;
   final int eventTime;
-  final String symbol;
   final int tradeId;
-  final double price;
-  final double quantity;
   final int buyerOrderId;
   final int sellerOrderId;
-  final int tradeTime;
-  final bool isBuyerMaker;
 
   BinanceTrade({
       this.eventType,
       this.eventTime,
-      this.symbol,
+      symbol,
       this.tradeId,
-      this.price,
-      this.quantity,
+      price,
+      quantity,
       this.buyerOrderId,
       this.sellerOrderId,
-      this.tradeTime,
-      this.isBuyerMaker});
+      tradeTime,
+      orderType}) : super(market: 'Binance', symbol: symbol, price: price,
+      quantity: quantity, tradeTime: tradeTime, orderType: orderType);
 
   /**
    * {
@@ -51,8 +51,8 @@ class BinanceTrade {
       quantity: double.parse(jsonData['q'] ?? '0'),
       buyerOrderId: jsonData['b'] as int,
       sellerOrderId: jsonData['a'] as int,
-      tradeTime: jsonData['T'] as int,
-      isBuyerMaker: jsonData['m'] != null ? jsonData['m'] as bool : false,
+      tradeTime: (jsonData['T'] != null ? DateTime.fromMillisecondsSinceEpoch((jsonData['T'] as int)).toString() : '0'),
+      orderType: jsonData['m'] != null ? (jsonData['m'] as bool ? OrderType.SELL : OrderType.BUY) : OrderType.ALL,
     );
   }
 }

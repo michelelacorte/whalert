@@ -1,6 +1,7 @@
 import 'package:flutter_trading_volume/models/order_type.dart';
 
-class BinanceTradeLogs {
+class TradeLogs {
+  final String market;
   final String symbol;
   final double price;
   final double quantity;
@@ -8,7 +9,8 @@ class BinanceTradeLogs {
   final String tradeTime;
   final OrderType orderType;
 
-  BinanceTradeLogs({
+  TradeLogs({
+      this.market,
       this.symbol,
       this.price,
       this.quantity,
