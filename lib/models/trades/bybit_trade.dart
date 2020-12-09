@@ -43,7 +43,7 @@ class ByBitTrade extends BaseTrade{
       "timestamp":"2020-12-08T15:22:24.000Z",
       "symbol":"BTCUSD",
       "side":"Buy",
-      "size":1000,
+      "size":1000, // 1 USD of BTC
       "price":18836.5,
       "tick_direction":"ZeroPlusTick",
       "trade_id":"6706df9b-ca18-5625-8f8c-801f58496f0c",
@@ -59,7 +59,7 @@ class ByBitTrade extends BaseTrade{
     return ByBitTrade(
       symbol: tradeData != null ? tradeData[0].symbol : '',
       price: tradeData != null ? tradeData[0].price ?? 0 : 0,
-      quantity: tradeData != null ? tradeData[0].size ?? 0 : 0,
+      quantity: tradeData != null ? (tradeData[0].size/tradeData[0].price) ?? 0 : 0,
       orderType: tradeData != null ? (tradeData[0].side.contains('Buy') ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
       tradeTime: tradeData != null ? tradeData[0].time : '0',
     );

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/websockets/base_socket.dart';
@@ -35,7 +37,11 @@ class BitfinexSocket implements BaseSocket {
 
   @override
   String wsSubscribeMessage() {
-    return """{"event": "subscribe", "channel": "trades", "symbol": "${pair.toStringUSD()}"}""";
+    return json.encode({
+      'event': 'subscribe',
+      'channel': 'trades',
+      'symbol': '${pair.toStringUSD()}'
+    });
   }
 
 }

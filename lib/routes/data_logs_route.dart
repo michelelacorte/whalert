@@ -6,6 +6,7 @@ import 'package:flutter_trading_volume/utils/utils.dart';
 
 class DataLogsSource extends DataTableSource {
   final List<TradeLogs> logs;
+  int _selectedCount = 0;
 
   DataLogsSource({this.logs});
 
@@ -28,7 +29,6 @@ class DataLogsSource extends DataTableSource {
     notifyListeners();
   }
 
-  int _selectedCount = 0;
 
   @override
   DataRow getRow(int index) {

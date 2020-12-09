@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/websockets/base_socket.dart';
@@ -35,7 +37,11 @@ class BinanceSocket extends BaseSocket{
 
   @override
   String wsSubscribeMessage() {
-    return """{"method": "SUBSCRIBE","params": ["${pair.toShortString().toLowerCase()}@trade"],"id": 1}""";
+    return json.encode({
+      'method': 'SUBSCRIBE',
+      'params': ['${pair.toShortString().toLowerCase()}@trade'],
+      'id': 1
+    });
   }
 
 }

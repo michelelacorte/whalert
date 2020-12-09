@@ -17,6 +17,7 @@ import 'package:flutter_trading_volume/widgets/custom_drawer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/trade_logs.dart';
 import 'models/trades/base_trade.dart';
+import 'models/trades/bitfinex_trade.dart';
 import 'models/trades/ftx_trade.dart';
 import 'utils/constants.dart';
 import 'routes/donation_route.dart';
@@ -79,6 +80,11 @@ class _TradeHomePageState extends State<TradeHomePage> {
   double _cumulativePrice = 0;
   double _currentQtySliderValue = 10;
 
+  //Deltas
+  double _quantityDelta = 0;
+  double _quantityBuy = 0;
+  double _quantitySell = 0;
+
   SupportedPairs _currentPair = SupportedPairs.BTC_USDT;
   OrderType _currentOrderType = OrderType.SELL;
   //SupportedExchange _currentExchange = SupportedExchange.ALL;
@@ -111,13 +117,15 @@ class _TradeHomePageState extends State<TradeHomePage> {
         (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.FTX)*/) {
       _ftxSocket.connect();
     }
-    if(_byBitSocket.socket == null){
+    if(_byBitSocket.socket == null && _currentPair == SupportedPairs.BTC_USDT){
+      //TODO: Currently we don't support other pairs for ByBit
       _byBitSocket.connect();
     }
-    if(_bitmexSocket.socket == null){
+    if(_bitmexSocket.socket == null && _currentPair == SupportedPairs.BTC_USDT){
+      //TODO: Currently we don't support other pairs for BitMEX
       _bitmexSocket.connect();
     }
-    if(_bitfinexSocket.socket == null){
+    if(_bitfinexSocket.socket == null ){
       _bitfinexSocket.connect();
     }
     _listenForDataUpdate();
@@ -160,13 +168,11 @@ class _TradeHomePageState extends State<TradeHomePage> {
         if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
       });
     });
-    //TODO: WIP
     _bitfinexSocket.socket.stream.listen((event) {
       setState(() {
-        print(event);
-        //var trade = BitmexTrade.fromJson(event.toString());
-        //_updateData(trade);
-        //if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
+        var trade = BitfinexTrade.fromJson(event.toString());
+        _updateData(trade);
+        if(trade != null) _prices[BITFINEX_PRICE_ID] = trade.price;
       });
     });
   }
@@ -219,6 +225,17 @@ class _TradeHomePageState extends State<TradeHomePage> {
     return sum/_prices.length;
   }
 
+  void _updateQuantityDelta(BaseTrade trade) {
+    setState(() {
+      if(trade.orderType == OrderType.BUY) {
+        _quantityBuy += trade.quantity;
+      } else if (trade.orderType == OrderType.SELL) {
+        _quantitySell += trade.quantity;
+      }
+      _quantityDelta = _quantityBuy-_quantitySell;
+    });
+  }
+
   void _updateData(BaseTrade trade) {
     if (trade != null) {
       if (trade.quantity >= _currentQtySliderValue && _shouldLog(trade)) {
@@ -231,7 +248,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
           _cumulativePrice += (trade.price*trade.quantity);
           var bl = new TradeLogs(
               market: trade.market,
-              symbol: trade.symbol,
+              symbol: trade.symbol.isEmpty ? _currentPair.toShortString() : trade.symbol,
               price: trade.price,
               quantity: trade.quantity,
               value: (trade.price*trade.quantity),
@@ -240,6 +257,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
           _collectedTrades.add(bl);
           if(_callDataLogs != null && _callDataLogs.currentState != null)
             _callDataLogs.currentState.addLogs(bl);
+          _updateQuantityDelta(trade);
         });
       }
     }
@@ -502,6 +520,20 @@ class _TradeHomePageState extends State<TradeHomePage> {
                       'Price: ${_averagePrice().toStringAsFixed(4) ?? 0}\$'),
                   subtitle: Text(
                       'Quantity executed: ${humanReadableNumberGenerator(_cumulativeQuantity)}'),
+                ),
+                ListTile(
+                  title: RichText(
+                    text: TextSpan(
+                      text: "Quantity Delta (Buy-Sell): ",
+                      style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily),
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: '${humanReadableNumberGenerator(_quantityDelta)}',
+                            style: TextStyle(color: _quantityDelta.isNegative ? Colors.red : Colors.green,
+                                fontFamily: GoogleFonts.montserrat().fontFamily)),
+                      ],
+                    ),
+                  ),
                 ),
                 ListTile(
                   title: Text(

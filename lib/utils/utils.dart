@@ -17,7 +17,8 @@ void downloadStringAsCsv(String toExport) {
   html.Url.revokeObjectUrl(url);
 }
 
-String humanReadableNumberGenerator(double num) {
+
+String humanReadableNumberGenerator(double num, {int asFixed = 4}) {
   if (num > 999 && num < 99999) {
     return "${(num / 1000).toStringAsFixed(1)}K ";
   } else if (num > 99999 && num < 999999) {
@@ -27,6 +28,6 @@ String humanReadableNumberGenerator(double num) {
   } else if (num > 999999999) {
     return "${(num / 1000000000).toStringAsFixed(1)}B ";
   } else {
-    return num.toString();
+    return num.toStringAsFixed(asFixed);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/websockets/base_socket.dart';
@@ -35,7 +37,11 @@ class FtxSocket implements BaseSocket {
 
   @override
   String wsSubscribeMessage() {
-    return """{"op": "subscribe", "channel": "trades", "market": "${pair.toStringWithCustomReplace('/')}"}""";
+    return json.encode({
+      'op': 'subscribe',
+      'channel': 'trades',
+      'market': '${pair.toStringWithCustomReplace('/')}'
+    });
   }
 
 }

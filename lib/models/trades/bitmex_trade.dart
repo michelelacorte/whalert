@@ -41,7 +41,7 @@ class BitmexTrade extends BaseTrade{
       "timestamp":"2020-12-08T16:06:13.580Z",
       "symbol":"XBTUSD",
       "side":"Buy",
-      "size":1500,
+      "size":1500, // 1 USD of BTC
       "price":18813,
       "tickDirection":"PlusTick",
       "trdMatchID":"3539a9fa-ef88-4c25-6634-92997c69ec31",
@@ -60,7 +60,7 @@ class BitmexTrade extends BaseTrade{
     return BitmexTrade(
       symbol: tradeData != null ? tradeData[0].symbol : '',
       price: tradeData != null ? tradeData[0].price ?? 0 : 0,
-      quantity: tradeData != null ? tradeData[0].size ?? 0 : 0,
+      quantity: tradeData != null ? (tradeData[0].size/tradeData[0].price) ?? 0 : 0,
       orderType: tradeData != null ? (tradeData[0].side.contains('Buy') ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
       tradeTime: tradeData != null ? tradeData[0].time : '0',
     );
