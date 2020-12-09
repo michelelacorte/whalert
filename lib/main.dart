@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -487,6 +489,19 @@ class _TradeHomePageState extends State<TradeHomePage> {
         children: [
           Card(
             margin: EdgeInsets.all(16),
+            color: Colors.grey[200],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: 16),
+                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex',
+                style: TextStyle(fontSize: 20)),
+                SizedBox(height: 16),
+              ],
+            ),
+          ),
+          Card(
+            margin: EdgeInsets.all(16),
             color: Colors.red,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -498,7 +513,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                             fontSize: 24,
                             color: Colors.white)),
                     subtitle: Text(
-                        'This website is under development!\n\nCurrent supported exchange: Binance, FTX, ByBit, BitMEX',
+                        'This website is under development!',
                         style: TextStyle(color: Colors.white))),
               ],
             ),
