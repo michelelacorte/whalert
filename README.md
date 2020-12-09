@@ -29,6 +29,11 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.2.0+1
+	- Fixed exchange with contracts.
+	- Added BitFinex.
+	- Added Quantity delta.
+
 - v0.1.1+1
 	- Added human readable format for long values.
 
