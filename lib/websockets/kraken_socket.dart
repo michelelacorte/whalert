@@ -5,11 +5,11 @@ import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/websockets/base_socket.dart';
 import 'package:web_socket_channel/html.dart';
 
-class BitmexSocket implements BaseSocket {
+class KrakenSocket implements BaseSocket {
   SupportedPairs pair;
   HtmlWebSocketChannel socket;
 
-  BitmexSocket({@required this.pair});
+  KrakenSocket({@required this.pair});
 
   @override
   HtmlWebSocketChannel connect() {
@@ -32,14 +32,17 @@ class BitmexSocket implements BaseSocket {
 
   @override
   String wsUrl() {
-    return 'wss://www.bitmex.com/realtime';
+    return 'wss://ws.kraken.com';
   }
 
   @override
   String wsSubscribeMessage() {
     return json.encode({
-      'op': 'subscribe',
-      'args': ['trade:${pair.toStringXBT()}']
+      'event': 'subscribe',
+      'pair': ['${pair.toStringCustomXBT('/')}'],
+      'subscription': {
+        'name': 'trade'
+      }
     });
   }
 

@@ -1,29 +1,18 @@
-import 'dart:convert';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_trading_volume/models/order_type.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
-import 'package:flutter_trading_volume/models/trades/bitmex_trade.dart';
-import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/routes/data_logs_route.dart';
 import 'package:flutter_trading_volume/utils/utils.dart';
-import 'package:flutter_trading_volume/websockets/binance_socket.dart';
-import 'package:flutter_trading_volume/websockets/bitfinex_socket.dart';
-import 'package:flutter_trading_volume/websockets/bitmex_socket.dart';
-import 'package:flutter_trading_volume/websockets/bybit_socket.dart';
-import 'package:flutter_trading_volume/websockets/ftx_socket.dart';
+import 'package:flutter_trading_volume/websockets/callbacks/exchange_callbacks.dart';
+import 'package:flutter_trading_volume/websockets/manager/exchange_manager.dart';
 import 'package:flutter_trading_volume/widgets/custom_drawer.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'models/trade_logs.dart';
 import 'models/trades/base_trade.dart';
-import 'models/trades/bitfinex_trade.dart';
-import 'models/trades/ftx_trade.dart';
-import 'utils/constants.dart';
 import 'routes/donation_route.dart';
-import 'models/trades/binance_trade.dart';
 import 'utils/decimal_text_input_formatter.dart';
 
 
@@ -61,13 +50,8 @@ class TradeHomePage extends StatefulWidget {
   _TradeHomePageState createState() => _TradeHomePageState();
 }
 
-class _TradeHomePageState extends State<TradeHomePage> {
-  //Sockets
-  BinanceSocket _binanceSocket;
-  FtxSocket _ftxSocket;
-  ByBitSocket _byBitSocket;
-  BitmexSocket _bitmexSocket;
-  BitfinexSocket _bitfinexSocket;
+class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallbacks {
+  ExchangeManager _exchangeSockets;
 
   AudioPlayer audioPlayer = AudioPlayer();
 
@@ -86,6 +70,9 @@ class _TradeHomePageState extends State<TradeHomePage> {
   double _quantityDelta = 0;
   double _quantityBuy = 0;
   double _quantitySell = 0;
+  double _valueDelta = 0;
+  double _valueBuy = 0;
+  double _valueSell = 0;
 
   SupportedPairs _currentPair = SupportedPairs.BTC_USDT;
   OrderType _currentOrderType = OrderType.SELL;
@@ -103,98 +90,44 @@ class _TradeHomePageState extends State<TradeHomePage> {
   void initState() {
     super.initState();
     _dataLogsRoute = DataLogsRoute(title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
-    _binanceSocket = new BinanceSocket(pair: _currentPair);
-    _ftxSocket = new FtxSocket(pair: _currentPair);
-    _byBitSocket = new ByBitSocket(pair: _currentPair);
-    _bitmexSocket = new BitmexSocket(pair: _currentPair);
-    _bitfinexSocket = new BitfinexSocket(pair: _currentPair);
+    _exchangeSockets = ExchangeManager(_currentPair, this);
   }
 
-  void _connectToSocket() {
-    if (_binanceSocket.socket == null/* &&
-        (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.BINANCE)*/) {
-      _binanceSocket.connect();
-    }
-    if (_ftxSocket.socket == null/* &&
-        (_currentExchange == SupportedExchange.ALL || _currentExchange == SupportedExchange.FTX)*/) {
-      _ftxSocket.connect();
-    }
-    if(_byBitSocket.socket == null && _currentPair == SupportedPairs.BTC_USDT){
-      //TODO: Currently we don't support other pairs for ByBit
-      _byBitSocket.connect();
-    }
-    if(_bitmexSocket.socket == null && _currentPair == SupportedPairs.BTC_USDT){
-      //TODO: Currently we don't support other pairs for BitMEX
-      _bitmexSocket.connect();
-    }
-    if(_bitfinexSocket.socket == null ){
-      _bitfinexSocket.connect();
-    }
-    _listenForDataUpdate();
+  void _resetDeltas() {
+    _quantityDelta = 0;
+    _quantityBuy = 0;
+    _quantitySell = 0;
+    _valueDelta = 0;
+    _valueBuy = 0;
+    _valueSell = 0;
   }
 
-  void _closeConnection() {
-    _binanceSocket.closeConnection();
-    _ftxSocket.closeConnection();
-    _byBitSocket.closeConnection();
-    _bitmexSocket.closeConnection();
-    _bitfinexSocket.closeConnection();
+  @override
+  void onTrade(BaseTrade trade, int id) {
+    setState(() {
+      _updateData(trade);
+      if(trade != null) _prices[id] = trade.price;
+    });
   }
 
-  void _listenForDataUpdate() {
-    _binanceSocket.socket.stream.listen((event) {
-      setState(() {
-        var trade = BinanceTrade.fromJson(event.toString());
-        _updateData(trade);
-        if(trade != null) _prices[BINANCE_PRICE_ID] = trade.price;
-      });
-    });
-    _ftxSocket.socket.stream.listen((event) {
-      setState(() {
-        var trade = FtxTrade.fromJson(event.toString());
-        _updateData(trade);
-        if(trade != null) _prices[FTX_PRICE_ID] = trade.price;
-      });
-    });
-    _byBitSocket.socket.stream.listen((event) {
-      setState(() {
-        var trade = ByBitTrade.fromJson(event.toString());
-        _updateData(trade);
-        if(trade != null) _prices[BYBIT_PRICE_ID] = trade.price;
-      });
-    });
-    _bitmexSocket.socket.stream.listen((event) {
-      setState(() {
-        var trade = BitmexTrade.fromJson(event.toString());
-        _updateData(trade);
-        if(trade != null) _prices[BITMEX_PRICE_ID] = trade.price;
-      });
-    });
-    _bitfinexSocket.socket.stream.listen((event) {
-      setState(() {
-        var trade = BitfinexTrade.fromJson(event.toString());
-        _updateData(trade);
-        if(trade != null) _prices[BITFINEX_PRICE_ID] = trade.price;
-      });
-    });
-  }
 
   void _startStopSocket() {
     if (!_started) {
       setState(() {
+        _resetDeltas();
         _cumulativeQuantity = 0;
         _cumulativePrice = 0;
         _endTime = '';
         _startTime = DateTime.now().toString();
         _started = true;
       });
-      _connectToSocket();
+      _exchangeSockets.connectToSocket();
     } else {
       setState(() {
         _endTime = DateTime.now().toString();
         _started = false;
       });
-      _closeConnection();
+      _exchangeSockets.closeConnection();
     }
   }
 
@@ -216,15 +149,19 @@ class _TradeHomePageState extends State<TradeHomePage> {
 
   double _averagePrice() {
     double sum = 0;
+    int realLength = 0;
     if(_prices.length == 0) {
       return sum;
     } else if (_prices.length == 1) {
       return _prices[0] ?? 0;
     }
     _prices.forEach((key, value) {
+      if(value > 0) {
+        realLength++;
         sum += value;
+      }
     });
-    return sum/_prices.length;
+    return sum/realLength;
   }
 
   void _updateQuantityDelta(BaseTrade trade) {
@@ -235,6 +172,17 @@ class _TradeHomePageState extends State<TradeHomePage> {
         _quantitySell += trade.quantity;
       }
       _quantityDelta = _quantityBuy-_quantitySell;
+    });
+  }
+
+  void _updateValueDelta(BaseTrade trade) {
+    setState(() {
+      if(trade.orderType == OrderType.BUY) {
+        _valueBuy += (trade.price*trade.quantity);
+      } else if (trade.orderType == OrderType.SELL) {
+        _valueSell += (trade.price*trade.quantity);
+      }
+      _valueDelta = _valueBuy-_valueSell;
     });
   }
 
@@ -260,6 +208,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
           if(_callDataLogs != null && _callDataLogs.currentState != null)
             _callDataLogs.currentState.addLogs(bl);
           _updateQuantityDelta(trade);
+          _updateValueDelta(trade);
         });
       }
     }
@@ -410,11 +359,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
                                                     .showSnackBar(snackBar_alreadyStarted);
                                               } else {
                                                 _currentPair = newValue;
-                                                _binanceSocket.pair = newValue;
-                                                _ftxSocket.pair = newValue;
-                                                _byBitSocket.pair = newValue;
-                                                _bitmexSocket.pair = newValue;
-                                                _bitfinexSocket.pair = newValue;
+                                                _exchangeSockets.updatePairs(newValue);
                                               }
                                             });
                                           },
@@ -494,7 +439,7 @@ class _TradeHomePageState extends State<TradeHomePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 16),
-                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex',
+                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex, Kraken',
                 style: TextStyle(fontSize: 20)),
                 SizedBox(height: 16),
               ],
@@ -545,6 +490,20 @@ class _TradeHomePageState extends State<TradeHomePage> {
                         TextSpan(
                             text: '${humanReadableNumberGenerator(_quantityDelta)}',
                             style: TextStyle(color: _quantityDelta.isNegative ? Colors.red : Colors.green,
+                                fontFamily: GoogleFonts.montserrat().fontFamily)),
+                      ],
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: RichText(
+                    text: TextSpan(
+                      text: "Value Delta (Buy-Sell): ",
+                      style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily),
+                      children: <TextSpan>[
+                        TextSpan(
+                            text: '${humanReadableNumberGenerator(_valueDelta)}\$',
+                            style: TextStyle(color: _valueDelta.isNegative ? Colors.red : Colors.green,
                                 fontFamily: GoogleFonts.montserrat().fontFamily)),
                       ],
                     ),

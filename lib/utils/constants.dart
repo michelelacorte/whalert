@@ -7,3 +7,4 @@ const FTX_PRICE_ID = 2;
 const BYBIT_PRICE_ID = 3;
 const BITMEX_PRICE_ID = 4;
 const BITFINEX_PRICE_ID = 5;
+const KRAKEN_PRICE_ID = 6;

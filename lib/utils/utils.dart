@@ -19,13 +19,14 @@ void downloadStringAsCsv(String toExport) {
 
 
 String humanReadableNumberGenerator(double num, {int asFixed = 4}) {
-  if (num > 999 && num < 99999) {
+  final numAbs = num.abs();
+  if (numAbs > 999 && numAbs < 99999) {
     return "${(num / 1000).toStringAsFixed(1)}K ";
-  } else if (num > 99999 && num < 999999) {
+  } else if (numAbs > 99999 && numAbs < 999999) {
     return "${(num / 1000).toStringAsFixed(0)}K ";
-  } else if (num > 999999 && num < 999999999) {
+  } else if (numAbs > 999999 && numAbs < 999999999) {
     return "${(num / 1000000).toStringAsFixed(1)}M ";
-  } else if (num > 999999999) {
+  } else if (numAbs > 999999999) {
     return "${(num / 1000000000).toStringAsFixed(1)}B ";
   } else {
     return num.toStringAsFixed(asFixed);
