@@ -2,10 +2,12 @@ import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/models/trades/binance_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bitfinex_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bitmex_trade.dart';
+import 'package:flutter_trading_volume/models/trades/bitstamp_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/models/trades/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/trades/kraken_trade.dart';
 import 'package:flutter_trading_volume/utils/constants.dart';
+import 'package:flutter_trading_volume/websockets/bitstamp_socket.dart';
 import 'package:flutter_trading_volume/websockets/callbacks/exchange_callbacks.dart';
 
 import '../binance_socket.dart';
@@ -24,6 +26,7 @@ class ExchangeManager {
   BitmexSocket _bitmexSocket;
   BitfinexSocket _bitfinexSocket;
   KrakenSocket _krakenSocket;
+  BitstampSocket _bitstampSocket;
 
   //Callbacks
   ExchangeCallbacks _exchangeCallbacks;
@@ -37,6 +40,7 @@ class ExchangeManager {
     _bitmexSocket = new BitmexSocket(pair: _currentPair);
     _bitfinexSocket = new BitfinexSocket(pair: _currentPair);
     _krakenSocket = new KrakenSocket(pair: _currentPair);
+    _bitstampSocket = new BitstampSocket(pair: _currentPair);
   }
 
   void updatePairs(SupportedPairs pair) {
@@ -77,6 +81,10 @@ class ExchangeManager {
         });
       }
     });
+    _bitstampSocket.socket.stream.listen((event) {
+      var trade = BitstampTrade.fromJson(event.toString());
+      _exchangeCallbacks.onTrade(trade, BITSTAMP_PRICE_ID);
+    });
   }
 
   void connectToSocket() {
@@ -102,10 +110,12 @@ class ExchangeManager {
     if(_krakenSocket.socket == null ){
       _krakenSocket.connect();
     }
+    if(_bitstampSocket.socket == null ){
+      _bitstampSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
-  //TODO: unsubscribe before close connection.
   void closeConnection() {
     _binanceSocket.closeConnection();
     _ftxSocket.closeConnection();
@@ -113,6 +123,7 @@ class ExchangeManager {
     _bitmexSocket.closeConnection();
     _bitfinexSocket.closeConnection();
     _krakenSocket.closeConnection();
+    _bitstampSocket.closeConnection();
   }
 
 }
