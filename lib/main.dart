@@ -439,7 +439,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 16),
-                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex, Kraken, Bitstamp',
+                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex, Kraken, Bitstamp, Coinbase',
                 style: TextStyle(fontSize: 20)),
                 SizedBox(height: 16),
               ],

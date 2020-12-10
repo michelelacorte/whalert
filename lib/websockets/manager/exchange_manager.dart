@@ -4,11 +4,13 @@ import 'package:flutter_trading_volume/models/trades/bitfinex_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bitmex_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bitstamp_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
+import 'package:flutter_trading_volume/models/trades/coinbase_trade.dart';
 import 'package:flutter_trading_volume/models/trades/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/trades/kraken_trade.dart';
 import 'package:flutter_trading_volume/utils/constants.dart';
 import 'package:flutter_trading_volume/websockets/bitstamp_socket.dart';
 import 'package:flutter_trading_volume/websockets/callbacks/exchange_callbacks.dart';
+import 'package:flutter_trading_volume/websockets/coinbase_socket.dart';
 
 import '../binance_socket.dart';
 import '../bitfinex_socket.dart';
@@ -27,6 +29,7 @@ class ExchangeManager {
   BitfinexSocket _bitfinexSocket;
   KrakenSocket _krakenSocket;
   BitstampSocket _bitstampSocket;
+  CoinbaseSocket _coinbaseSocket;
 
   //Callbacks
   ExchangeCallbacks _exchangeCallbacks;
@@ -41,6 +44,7 @@ class ExchangeManager {
     _bitfinexSocket = new BitfinexSocket(pair: _currentPair);
     _krakenSocket = new KrakenSocket(pair: _currentPair);
     _bitstampSocket = new BitstampSocket(pair: _currentPair);
+    _coinbaseSocket = new CoinbaseSocket(pair: _currentPair);
   }
 
   void updatePairs(SupportedPairs pair) {
@@ -85,6 +89,10 @@ class ExchangeManager {
       var trade = BitstampTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, BITSTAMP_PRICE_ID);
     });
+    _coinbaseSocket.socket.stream.listen((event) {
+      var trade = CoinbaseTrade.fromJson(event.toString());
+      _exchangeCallbacks.onTrade(trade, COINBASE_PRICE_ID);
+    });
   }
 
   void connectToSocket() {
@@ -113,6 +121,9 @@ class ExchangeManager {
     if(_bitstampSocket.socket == null ){
       _bitstampSocket.connect();
     }
+    if(_coinbaseSocket.socket == null ){
+      _coinbaseSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
@@ -124,6 +135,7 @@ class ExchangeManager {
     _bitfinexSocket.closeConnection();
     _krakenSocket.closeConnection();
     _bitstampSocket.closeConnection();
+    _coinbaseSocket.closeConnection();
   }
 
 }
