@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/websockets/base_socket.dart';
@@ -17,7 +16,7 @@ class BinanceSocket extends BaseSocket{
       socket = HtmlWebSocketChannel.connect(wsUrl());
     }
     if(socket != null && socket.sink != null) {
-      socket.sink.add(wsSubscribeMessage());
+      socket.sink.add(wsSubscribeUnsubscribeMessage());
     }
     return socket;
   }
@@ -25,6 +24,7 @@ class BinanceSocket extends BaseSocket{
   @override
   void closeConnection() {
     if(socket != null && socket.sink != null) {
+      socket.sink.add(wsSubscribeUnsubscribeMessage(subscribe: false));
       socket.sink.close();
     }
     socket = null;
@@ -36,9 +36,9 @@ class BinanceSocket extends BaseSocket{
   }
 
   @override
-  String wsSubscribeMessage() {
+  String wsSubscribeUnsubscribeMessage({bool subscribe = true}) {
     return json.encode({
-      'method': 'SUBSCRIBE',
+      'method': subscribe ? 'SUBSCRIBE' : 'UNSUBSCRIBE',
       'params': ['${pair.toShortString().toLowerCase()}@trade'],
       'id': 1
     });

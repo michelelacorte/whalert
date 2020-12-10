@@ -17,7 +17,7 @@ class ByBitSocket implements BaseSocket {
       socket = HtmlWebSocketChannel.connect(wsUrl());
     }
     if(socket != null && socket.sink != null) {
-      socket.sink.add(wsSubscribeMessage());
+      socket.sink.add(wsSubscribeUnsubscribeMessage());
     }
     return socket;
   }
@@ -25,6 +25,7 @@ class ByBitSocket implements BaseSocket {
   @override
   void closeConnection() {
     if(socket != null && socket.sink != null) {
+      socket.sink.add(wsSubscribeUnsubscribeMessage(subscribe: false));
       socket.sink.close();
     }
     socket = null;
@@ -36,9 +37,10 @@ class ByBitSocket implements BaseSocket {
   }
 
   @override
-  String wsSubscribeMessage() {
+  //Unsubscribe not present in doc...
+  String wsSubscribeUnsubscribeMessage({bool subscribe = true}) {
     return json.encode({
-      'op': 'subscribe',
+      'op': subscribe ? 'subscribe' : 'unsubscribe',
       'args': ['trade.${pair.toStringUSD()}']
     });
   }

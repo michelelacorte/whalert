@@ -17,7 +17,7 @@ class KrakenSocket implements BaseSocket {
       socket = HtmlWebSocketChannel.connect(wsUrl());
     }
     if(socket != null && socket.sink != null) {
-      socket.sink.add(wsSubscribeMessage());
+      socket.sink.add(wsSubscribeUnsubscribeMessage());
     }
     return socket;
   }
@@ -25,6 +25,7 @@ class KrakenSocket implements BaseSocket {
   @override
   void closeConnection() {
     if(socket != null && socket.sink != null) {
+      socket.sink.add(wsSubscribeUnsubscribeMessage(subscribe: false));
       socket.sink.close();
     }
     socket = null;
@@ -36,9 +37,9 @@ class KrakenSocket implements BaseSocket {
   }
 
   @override
-  String wsSubscribeMessage() {
+  String wsSubscribeUnsubscribeMessage({bool subscribe = true}) {
     return json.encode({
-      'event': 'subscribe',
+      'event': subscribe ? 'subscribe' : 'unsubscribe',
       'pair': ['${pair.toStringCustomXBT('/')}'],
       'subscription': {
         'name': 'trade'

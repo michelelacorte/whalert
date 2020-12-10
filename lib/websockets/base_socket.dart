@@ -4,5 +4,5 @@ abstract class BaseSocket {
   HtmlWebSocketChannel connect();
   void closeConnection();
   String wsUrl();
-  String wsSubscribeMessage();
+  String wsSubscribeUnsubscribeMessage({bool subscribe = true});
 }

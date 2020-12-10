@@ -17,7 +17,7 @@ class BitfinexSocket implements BaseSocket {
       socket = HtmlWebSocketChannel.connect(wsUrl());
     }
     if(socket != null && socket.sink != null) {
-      socket.sink.add(wsSubscribeMessage());
+      socket.sink.add(wsSubscribeUnsubscribeMessage());
     }
     return socket;
   }
@@ -25,6 +25,7 @@ class BitfinexSocket implements BaseSocket {
   @override
   void closeConnection() {
     if(socket != null && socket.sink != null) {
+      socket.sink.add(wsSubscribeUnsubscribeMessage(subscribe: false));
       socket.sink.close();
     }
     socket = null;
@@ -36,7 +37,13 @@ class BitfinexSocket implements BaseSocket {
   }
 
   @override
-  String wsSubscribeMessage() {
+  String wsSubscribeUnsubscribeMessage({bool subscribe = true}) {
+    if(!subscribe) {
+      return json.encode({
+        'event': 'unsubscribe',
+        'chanId': 0,
+      });
+    }
     return json.encode({
       'event': 'subscribe',
       'channel': 'trades',
