@@ -55,18 +55,28 @@ class FtxTrade extends BaseTrade{
        ]
       }
    */
-  factory FtxTrade.fromJson(String jsonAsString) {
+  static List<FtxTrade> fromJson(String jsonAsString) {
+    final List<FtxTrade> resultTrade = [];
     if(jsonAsString == null || jsonAsString.contains('subscribed')) return null;
     final jsonData = json.decode(jsonAsString);
     var dataJson = jsonData['data'] as List;
     List<FtxTradeData> tradeData = dataJson.map((ftxJson) => FtxTradeData.fromJson(ftxJson)).toList();
-    return FtxTrade(
-      symbol: jsonData['market'] as String,
-      price: tradeData != null ? tradeData[0].price ?? 0 : 0,
-      quantity: tradeData != null ? tradeData[0].size ?? 0 : 0,
-      orderType: tradeData != null ? (tradeData[0].side.contains('buy') ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
-      liquidation: tradeData != null ? (tradeData[0].liquidation != null ? tradeData[0].liquidation : false) : false,
-      tradeTime: tradeData != null ? tradeData[0].time : '0',
-    );
+
+    if(tradeData.isEmpty) {
+      return null;
+    }
+
+    tradeData.forEach((element) {
+      resultTrade.add(FtxTrade(
+        symbol: jsonData['market'] as String,
+        price: element != null ? element.price ?? 0 : 0,
+        quantity: element != null ? element.size ?? 0 : 0,
+        orderType: element != null ? (element.side.contains('buy') ? OrderType.BUY : OrderType.SELL) : OrderType.ALL,
+        liquidation: element != null ? (element.liquidation != null ? element.liquidation : false) : false,
+        tradeTime: element != null ? element.time : '0',
+      ));
+    });
+
+    return resultTrade;
   }
 }

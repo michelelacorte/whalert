@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:archive/archive.dart';
 import 'package:flutter_trading_volume/models/supported_pairs.dart';
 import 'package:flutter_trading_volume/models/trades/binance_trade.dart';
 import 'package:flutter_trading_volume/models/trades/bitfinex_trade.dart';
@@ -7,10 +9,13 @@ import 'package:flutter_trading_volume/models/trades/bybit_trade.dart';
 import 'package:flutter_trading_volume/models/trades/coinbase_trade.dart';
 import 'package:flutter_trading_volume/models/trades/ftx_trade.dart';
 import 'package:flutter_trading_volume/models/trades/kraken_trade.dart';
+import 'package:flutter_trading_volume/models/trades/okex_trade.dart';
 import 'package:flutter_trading_volume/utils/constants.dart';
 import 'package:flutter_trading_volume/websockets/bitstamp_socket.dart';
 import 'package:flutter_trading_volume/websockets/callbacks/exchange_callbacks.dart';
 import 'package:flutter_trading_volume/websockets/coinbase_socket.dart';
+import 'package:flutter_trading_volume/websockets/huobi_socket.dart';
+import 'package:flutter_trading_volume/websockets/okex_socket.dart';
 
 import '../binance_socket.dart';
 import '../bitfinex_socket.dart';
@@ -30,6 +35,8 @@ class ExchangeManager {
   KrakenSocket _krakenSocket;
   BitstampSocket _bitstampSocket;
   CoinbaseSocket _coinbaseSocket;
+  HuobiSocket _huobiSocket;
+  OkExSocket _okExSocket;
 
   //Callbacks
   ExchangeCallbacks _exchangeCallbacks;
@@ -45,6 +52,8 @@ class ExchangeManager {
     _krakenSocket = new KrakenSocket(pair: _currentPair);
     _bitstampSocket = new BitstampSocket(pair: _currentPair);
     _coinbaseSocket = new CoinbaseSocket(pair: _currentPair);
+    _huobiSocket = new HuobiSocket(pair: _currentPair);
+    _okExSocket = new OkExSocket(pair: _currentPair);
   }
 
   void updatePairs(SupportedPairs pair) {
@@ -53,24 +62,28 @@ class ExchangeManager {
 
   void _listenForDataUpdate() {
     _binanceSocket.socket.stream.listen((event) {
-      var trade = BinanceTrade.fromJson(event.toString());
+      final trade = BinanceTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, BINANCE_PRICE_ID);
 
     });
     _ftxSocket.socket.stream.listen((event) {
-      var trade = FtxTrade.fromJson(event.toString());
-      _exchangeCallbacks.onTrade(trade, FTX_PRICE_ID);
+      final trades = FtxTrade.fromJson(event.toString());
+      if(trades != null && trades.isNotEmpty) {
+        trades.forEach((trade) {
+          _exchangeCallbacks.onTrade(trade, FTX_PRICE_ID);
+        });
+      }
     });
     _byBitSocket.socket.stream.listen((event) {
-      var trade = ByBitTrade.fromJson(event.toString());
+      final trade = ByBitTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, BYBIT_PRICE_ID);
     });
     _bitmexSocket.socket.stream.listen((event) {
-      var trade = BitmexTrade.fromJson(event.toString());
+      final trade = BitmexTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, BITMEX_PRICE_ID);
     });
     _bitfinexSocket.socket.stream.listen((event) {
-      var trades = BitfinexTrade.fromJson(event.toString());
+      final trades = BitfinexTrade.fromJson(event.toString());
       if(trades != null && trades.isNotEmpty) {
         trades.forEach((trade) {
           _exchangeCallbacks.onTrade(trade, BITFINEX_PRICE_ID);
@@ -78,7 +91,7 @@ class ExchangeManager {
       }
     });
     _krakenSocket.socket.stream.listen((event) {
-      var trades = KrakenTrade.fromJson(event.toString());
+      final trades = KrakenTrade.fromJson(event.toString());
       if(trades != null && trades.isNotEmpty) {
         trades.forEach((trade) {
           _exchangeCallbacks.onTrade(trade, KRAKEN_PRICE_ID);
@@ -86,12 +99,27 @@ class ExchangeManager {
       }
     });
     _bitstampSocket.socket.stream.listen((event) {
-      var trade = BitstampTrade.fromJson(event.toString());
+      final trade = BitstampTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, BITSTAMP_PRICE_ID);
     });
     _coinbaseSocket.socket.stream.listen((event) {
-      var trade = CoinbaseTrade.fromJson(event.toString());
+      final trade = CoinbaseTrade.fromJson(event.toString());
       _exchangeCallbacks.onTrade(trade, COINBASE_PRICE_ID);
+    });
+    _okExSocket.socket.stream.listen((event) {
+      final inflater = Inflate(event);
+      final trades = OkExTrade.fromJson(utf8.decode(inflater.getBytes()));
+      if(trades != null && trades.isNotEmpty) {
+        trades.forEach((trade) {
+          _exchangeCallbacks.onTrade(trade, OKEX_PRICE_ID);
+        });
+      }
+    });
+    //TODO: connection doesn't work, why?...
+    _huobiSocket.socket.stream.listen((event) {
+      //print(event);
+      //final trade = CoinbaseTrade.fromJson(event.toString());
+      //_exchangeCallbacks.onTrade(trade, COINBASE_PRICE_ID);
     });
   }
 
@@ -124,6 +152,12 @@ class ExchangeManager {
     if(_coinbaseSocket.socket == null ){
       _coinbaseSocket.connect();
     }
+    if(_huobiSocket.socket == null ){
+      _huobiSocket.connect();
+    }
+    if(_okExSocket.socket == null ){
+      _okExSocket.connect();
+    }
     _listenForDataUpdate();
   }
 
@@ -136,6 +170,8 @@ class ExchangeManager {
     _krakenSocket.closeConnection();
     _bitstampSocket.closeConnection();
     _coinbaseSocket.closeConnection();
+    _huobiSocket.closeConnection();
+    _okExSocket.closeConnection();
   }
 
 }

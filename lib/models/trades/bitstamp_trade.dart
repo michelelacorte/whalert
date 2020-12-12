@@ -54,7 +54,7 @@ class BitstampTrade extends BaseTrade{
    BitstampData tradeData = BitstampData.fromJson(jsonData['data']);
 
     return BitstampTrade(
-      symbol: tradeData != null ? jsonData['channel'].toString().replaceAll('live_trades_', '').toUpperCase() : '',
+      symbol: jsonData['channel'] != null ? jsonData['channel'].toString().replaceAll('live_trades_', '').toUpperCase() : '',
       price: tradeData != null ? tradeData.price ?? 0 : 0,
       quantity: tradeData != null ? (tradeData.size) ?? 0 : 0,
       orderType: tradeData != null ? tradeData.side : OrderType.ALL,

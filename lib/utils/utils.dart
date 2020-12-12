@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:math' as math;
 import 'package:flutter_trading_volume/utils/constants.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -31,4 +31,10 @@ String humanReadableNumberGenerator(double num, {int asFixed = 4}) {
   } else {
     return num.toStringAsFixed(asFixed);
   }
+}
+
+extension FancyIterable on Iterable<int> {
+  int get max => reduce(math.max);
+
+  int get min => reduce(math.min);
 }

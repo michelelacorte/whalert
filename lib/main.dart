@@ -15,7 +15,6 @@ import 'models/trades/base_trade.dart';
 import 'routes/donation_route.dart';
 import 'utils/decimal_text_input_formatter.dart';
 
-
 final snackBar_alreadyStarted =
     SnackBar(content: Text('Please stop recording before change pairs!'));
 
@@ -81,15 +80,16 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
   final GlobalKey<DataLogsRouteState> _callDataLogs = GlobalKey<DataLogsRouteState>();
   DataLogsRoute _dataLogsRoute;
 
-
   void play() async {
     await audioPlayer.play('beep.mp3');
   }
+  
 
   @override
   void initState() {
     super.initState();
-    _dataLogsRoute = DataLogsRoute(title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
+    _dataLogsRoute = DataLogsRoute(
+        title: 'Logs', logs: _collectedTrades, key: _callDataLogs);
     _exchangeSockets = ExchangeManager(_currentPair, this);
   }
 
@@ -439,8 +439,9 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: 16),
-                Text('Current supported exchange: Binance, FTX, ByBit, BitMEX, Bitfinex, Kraken, Bitstamp, Coinbase',
-                style: TextStyle(fontSize: 20)),
+                Text('Current supported exchange\n\nBinance, FTX, ByBit, BitMEX, Bitfinex, Kraken, Bitstamp, Coinbase, OKEx',
+                style: TextStyle(fontSize: 20),
+                textAlign: TextAlign.center),
                 SizedBox(height: 16),
               ],
             ),
@@ -552,7 +553,6 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
               ],
             ),
           ),
-
         ],
       ),
       floatingActionButton: FloatingActionButton(

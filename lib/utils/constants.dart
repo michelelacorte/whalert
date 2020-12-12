@@ -10,3 +10,4 @@ const BITFINEX_PRICE_ID = 5;
 const KRAKEN_PRICE_ID = 6;
 const BITSTAMP_PRICE_ID = 7;
 const COINBASE_PRICE_ID = 8;
+const OKEX_PRICE_ID = 9;
