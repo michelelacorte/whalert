@@ -29,6 +29,10 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.3.0+1
+	- Added Kraken, Bitstamp and Coinbase
+	- Added value delta in usd
+
 - v0.2.0+1
 	- Fixed exchange with contracts.
 	- Added BitFinex.
