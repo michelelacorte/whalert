@@ -29,6 +29,9 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.5.0+1
+	- UI refactor
+
 - v0.4.0+1
 	- Added OKEx
 	- Bugfix and improvements
