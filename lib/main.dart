@@ -446,122 +446,167 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
               ],
             ),
           ),
-          Card(
-            margin: EdgeInsets.all(16),
-            color: Colors.red,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                    title: Text('Please Note',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            color: Colors.white)),
-                    subtitle: Text(
-                        'This website is under development!',
-                        style: TextStyle(color: Colors.white))),
-              ],
-            ),
-          ),
-          Card(
-            margin: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: 32),
-                ListTile(
-                  title: Text(
-                    _currentPair.toShortString(),
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                  ),
-                ),
-                ListTile(
-                  title: Text(
-                      'Price: ${_averagePrice().toStringAsFixed(4) ?? 0}\$'),
-                  subtitle: Text(
-                      'Quantity executed: ${humanReadableNumberGenerator(_cumulativeQuantity)}'),
-                ),
-                ListTile(
-                  title: RichText(
-                    text: TextSpan(
-                      text: "Quantity Delta (Buy-Sell): ",
-                      style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily),
-                      children: <TextSpan>[
-                        TextSpan(
-                            text: '${humanReadableNumberGenerator(_quantityDelta)}',
-                            style: TextStyle(color: _quantityDelta.isNegative ? Colors.red : Colors.green,
-                                fontFamily: GoogleFonts.montserrat().fontFamily)),
-                      ],
-                    ),
-                  ),
-                ),
-                ListTile(
-                  title: RichText(
-                    text: TextSpan(
-                      text: "Value Delta (Buy-Sell): ",
-                      style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily),
-                      children: <TextSpan>[
-                        TextSpan(
-                            text: '${humanReadableNumberGenerator(_valueDelta)}\$',
-                            style: TextStyle(color: _valueDelta.isNegative ? Colors.red : Colors.green,
-                                fontFamily: GoogleFonts.montserrat().fontFamily)),
-                      ],
-                    ),
-                  ),
-                ),
-                ListTile(
-                  title: Text(
-                      'Cumulative Value: ${humanReadableNumberGenerator(_cumulativePrice)}\$'),
-                ),
-                ListTile(
-                  title: Text(
-                    'Started At: ' + _startTime,
-                  ),
-                ),
-                ListTile(
-                  title: Text(
-                    'Ended At: ' + _endTime,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ButtonTheme(
-                      minWidth: 200.0,
-                      height: 50.0,
-                      child:   OutlineButton(
-                        child: Text('View Data Logs', style: TextStyle(color: Theme.of(context).primaryColor)),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          style: BorderStyle.solid,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => _dataLogsRoute),
-                          );
-                        },
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Card(
+                  margin: EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      SizedBox(height: 32),
+                      Text(
+                        _currentPair.toShortString(),
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
                       ),
-                    ),
-                    SizedBox(width: 16),
-                  ],
+                      SizedBox(height: 16),
+                      Text(
+                          'Price: ${_averagePrice().toStringAsFixed(4) ?? 0}\$',
+                          style: TextStyle(fontSize: 18)),
+                      SizedBox(height: 8),
+                      Text(
+                          'Quantity executed: ${humanReadableNumberGenerator(_cumulativeQuantity)}',
+                          style: TextStyle(fontSize: 18)),
+                      SizedBox(height: 8),
+                      Text(
+                          'Cumulative Value: ${humanReadableNumberGenerator(_cumulativePrice)}\$',
+                          style: TextStyle(fontSize: 18)),
+                      SizedBox(height: 16),
+                      Text(
+                        'Started At: ' + _startTime,
+                      ),
+                      Text(
+                        'Ended At: ' + _endTime,
+                      ),
+                      SizedBox(height: 56),
+                    ],
+                  ),
                 ),
-                SizedBox(height: 32),
-              ],
-            ),
-          ),
+              ),
+              Expanded(
+                child: Card(
+                  margin: EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      SizedBox(height: 32),
+                      Text('Analysis',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),),
+                      SizedBox(height: 16),
+                      RichText(
+                        text: TextSpan(
+                          text: "Quantity Delta (Buy-Sell): ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_quantityDelta)}',
+                                style: TextStyle(color: _quantityDelta.isNegative ? Colors.red : Colors.green,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: "Value Delta (Buy-Sell): ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_valueDelta)}\$',
+                                style: TextStyle(color: _valueDelta.isNegative ? Colors.red : Colors.green,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: "Quantity Buy: ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_quantityBuy)}',
+                                style: TextStyle(color: Colors.green,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: "Value Buy: ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_valueBuy)}\$',
+                                style: TextStyle(color: Colors.green,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: "Quantity Sell: ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_quantitySell)}',
+                                style: TextStyle(color: Colors.red,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      RichText(
+                        text: TextSpan(
+                          text: "Value Sell: ",
+                          style: TextStyle(color: Colors.black, fontFamily: GoogleFonts.montserrat().fontFamily, fontSize: 18),
+                          children: <TextSpan>[
+                            TextSpan(
+                                text: '${humanReadableNumberGenerator(_valueSell)}\$',
+                                style: TextStyle(color: Colors.red,
+                                    fontFamily: GoogleFonts.montserrat().fontFamily)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startStopSocket,
-        backgroundColor: Theme.of(context).accentColor,
-        child: Icon(
-          _started ? Icons.pause : Icons.play_arrow,
-          color: Colors.white,
-        ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => _dataLogsRoute),
+              );
+            },
+            backgroundColor: Colors.white,
+            child: Icon(Icons.list,
+              color: Theme.of(context).accentColor,
+            ),
+          ),
+          SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: null,
+            onPressed: _startStopSocket,
+            backgroundColor: Theme.of(context).accentColor,
+            child: Icon(
+              _started ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+            ),
+          )
+        ],
       ),
     );
   }
