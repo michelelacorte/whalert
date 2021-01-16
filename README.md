@@ -11,7 +11,7 @@
 3. [Changelog](#3-changelog)
 4. [Contribute](#4-contribute)
 5. [Donation](#5-donation)
-6. [License](#5-license)
+6. [License](#6-license)
 
 ## 1. What's this
 
