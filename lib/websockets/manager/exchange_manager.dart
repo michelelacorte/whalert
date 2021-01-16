@@ -44,6 +44,10 @@ class ExchangeManager {
   ExchangeManager(SupportedPairs pair, ExchangeCallbacks callbacks) {
     this._exchangeCallbacks = callbacks;
     this._currentPair = pair;
+    _initExchanges();
+  }
+
+  void _initExchanges() {
     _binanceSocket = new BinanceSocket(pair: _currentPair);
     _ftxSocket = new FtxSocket(pair: _currentPair);
     _byBitSocket = new ByBitSocket(pair: _currentPair);
@@ -58,6 +62,7 @@ class ExchangeManager {
 
   void updatePairs(SupportedPairs pair) {
     this._currentPair = pair;
+    _initExchanges();
   }
 
   void _listenForDataUpdate() {
