@@ -29,6 +29,10 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
+- v0.5.1+1
+	- Fix prices bug on other pairs
+	- Fix switch to other pairs
+
 - v0.5.0+1
 	- UI refactor
 
