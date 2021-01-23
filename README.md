@@ -30,40 +30,43 @@ The project is online at the [whalert.it](https://whalert.it) website.
 
 ## 3. Changelog
 
-- v0.5.1+1
+- v0.5.2
+	- Minor improvements
+
+- v0.5.1
 	- Fix prices bug on other pairs
 	- Fix switch to other pairs
 
-- v0.5.0+1
+- v0.5.0
 	- UI refactor
 
-- v0.4.0+1
+- v0.4.0
 	- Added OKEx
 	- Bugfix and improvements
 
-- v0.3.0+1
+- v0.3.0
 	- Added Kraken, Bitstamp and Coinbase
 	- Added value delta in usd
 
-- v0.2.0+1
+- v0.2.0
 	- Fixed exchange with contracts.
 	- Added BitFinex.
 	- Added Quantity delta.
 
-- v0.1.1+1
+- v0.1.1
 	- Added human readable format for long values.
 
-- v0.1.0+1
+- v0.1.0
 	- Added FTX, ByBit and BitMEX exchange.
 	- Bugfix
 
-- v0.0.2+1
+- v0.0.2
 
 	- Added realtime update of logs (for now list has maxSize of 200 rows)
 	- Added possibility to enter manual value of quantity to log
 	- UI Refactor
 
-- v0.0.1+1
+- v0.0.1
 	- First public commit
 
 
