@@ -15,7 +15,7 @@ import 'models/trades/base_trade.dart';
 import 'routes/donation_route.dart';
 import 'utils/decimal_text_input_formatter.dart';
 
-final snackBar_alreadyStarted =
+final SNACKBAR_ALREADY_STARTED =
     SnackBar(content: Text('Please stop recording before change pairs!'));
 
 void main() {
@@ -322,7 +322,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
                                             setState(() {
                                               if (_started) {
                                                 ScaffoldMessenger.of(context)
-                                                    .showSnackBar(snackBar_alreadyStarted);
+                                                    .showSnackBar(SNACKBAR_ALREADY_STARTED);
                                               } else {
                                                 _currentOrderType = newValue;
                                               }
@@ -359,7 +359,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
                                             setState(() {
                                               if (_started) {
                                                 ScaffoldMessenger.of(context)
-                                                    .showSnackBar(snackBar_alreadyStarted);
+                                                    .showSnackBar(SNACKBAR_ALREADY_STARTED);
                                               } else {
                                                 _currentPair = newValue;
                                                 _exchangeSockets.updatePairs(newValue);
@@ -476,7 +476,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
                       Text(
                           'Cumulative Value: ${humanReadableNumberGenerator(_cumulativePrice)}\$',
                           style: TextStyle(fontSize: 18)),
-                      SizedBox(height: 16),
+                      SizedBox(height: 32),
                       Text(
                         'Started At: ' + _startTime,
                       ),
@@ -523,7 +523,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
                           ],
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 16),
                       RichText(
                         text: TextSpan(
                           text: "Quantity Buy: ",
@@ -549,7 +549,7 @@ class _TradeHomePageState extends State<TradeHomePage> implements ExchangeCallba
                           ],
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 16),
                       RichText(
                         text: TextSpan(
                           text: "Quantity Sell: ",

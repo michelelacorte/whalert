@@ -112,10 +112,11 @@ class DataLogsRouteState extends State<DataLogsRoute> {
   }
 
   void _exportAsCsv() {
-    List<List<dynamic>> rows = List<List<dynamic>>();
+    List<List<dynamic>> rows = [[]];
     //Adding header, maybe we can improve this...
-    List<dynamic> row = List();
-    row.add('Symbol');
+    List<dynamic> row = [];
+    row.add('Exchange');
+    row.add('Pair');
     row.add('Order Type');
     row.add('Price');
     row.add('Quantity');
@@ -124,7 +125,8 @@ class DataLogsRouteState extends State<DataLogsRoute> {
     rows.add(row);
     //Adding rows.
     widget.logs.forEach((element) {
-      List<dynamic> row = List();
+      List<dynamic> row = [];
+      row.add(element.market);
       row.add(element.symbol);
       row.add(element.orderType.toShortString());
       row.add(element.price);
